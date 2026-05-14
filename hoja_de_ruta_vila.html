@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Hoja de Ruta · Vila</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&display=swap');
+
+  :root {
+    --rojo: #C0392B;
+    --rojo-osc: #96281B;
+    --rojo-light: #fdedec;
+    --gris-osc: #1C2833;
+    --gris-med: #566573;
+    --gris-line: #dde1e7;
+    --gris-bg: #f5f7fa;
+    --azul: #1A5276;
+    --azul-light: #eaf1fb;
+    --blanco: #ffffff;
+    --negro: #17202A;
+    --verde: #1a7a4a;
+    --verde-light: #e8f5ee;
+    --naranja: #d35400;
+    --naranja-light: #fef0e7;
+    --radio: 10px;
+    --sombra: 0 2px 12px rgba(0,0,0,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--gris-bg);
+    color: var(--negro);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  /* ── HEADER ─────────────────────────────────────────────── */
+  .app-header {
+    background: var(--gris-osc);
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px 10px;
+    gap: 12px;
+  }
+  .logo-pill {
+    background: var(--rojo);
+    color: white;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    padding: 4px 14px 5px;
+    border-radius: 6px;
+    line-height: 1;
+  }
+  .header-title {
+    flex: 1;
+  }
+  .header-title h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.5px;
+    line-height: 1.1;
+  }
+  .header-title p {
+    font-size: 11px;
+    color: #8899aa;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    margin-top: 1px;
+  }
+  .header-date {
+    font-size: 11px;
+    color: #8899aa;
+    text-align: right;
+    font-weight: 600;
+  }
+  .header-bar {
+    height: 4px;
+    background: linear-gradient(90deg, var(--rojo) 0%, var(--rojo-osc) 100%);
+  }
+
+  /* ── CONTENIDO ──────────────────────────────────────────── */
+  .content { padding: 14px 14px 0; max-width: 500px; margin: 0 auto; }
+
+  /* ── CARDS ──────────────────────────────────────────────── */
+  .card {
+    background: var(--blanco);
+    border-radius: var(--radio);
+    box-shadow: var(--sombra);
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 14px 10px;
+    border-bottom: 1px solid var(--gris-line);
+  }
+  .card-header.azul    { background: var(--azul); }
+  .card-header.rojo    { background: var(--rojo-osc); }
+  .card-header.gris    { background: var(--gris-med); }
+  .card-header .icon {
+    font-size: 16px;
+    line-height: 1;
+  }
+  .card-header h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .card-header .badge {
+    margin-left: auto;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+  }
+  .card-body { padding: 14px; }
+
+  /* ── SEARCH INPUT ───────────────────────────────────────── */
+  .search-wrap {
+    position: relative;
+    margin-bottom: 10px;
+  }
+  .search-icon {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 15px;
+    pointer-events: none;
+    color: var(--gris-med);
+  }
+  .search-input {
+    width: 100%;
+    padding: 11px 36px 11px 36px;
+    border: 2px solid var(--gris-line);
+    border-radius: 8px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--negro);
+    background: var(--gris-bg);
+    transition: border-color 0.2s, background 0.2s;
+    -webkit-appearance: none;
+  }
+  .search-input:focus {
+    outline: none;
+    border-color: var(--azul);
+    background: white;
+  }
+  .search-input.rojo:focus  { border-color: var(--rojo); }
+  .search-input.verde:focus { border-color: var(--verde); }
+  .clear-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 17px;
+    color: var(--gris-med);
+    cursor: pointer;
+    display: none;
+    line-height: 1;
+    padding: 2px;
+  }
+
+  /* ── DROPDOWN LIST ──────────────────────────────────────── */
+  .dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: white;
+    border: 1.5px solid var(--gris-line);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.13);
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 200;
+    display: none;
+  }
+  .dropdown.open { display: block; }
+  .dd-item {
+    padding: 11px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.12s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dd-item:last-child { border-bottom: none; }
+  .dd-item:active, .dd-item.highlighted { background: var(--gris-bg); }
+  .dd-item .dd-sub {
+    font-size: 11px;
+    color: var(--gris-med);
+    font-weight: 500;
+    margin-left: auto;
+  }
+  .dd-empty {
+    padding: 14px;
+    text-align: center;
+    color: var(--gris-med);
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  /* ── FICHA DE DATOS ─────────────────────────────────────── */
+  .ficha {
+    display: none;
+    margin-top: 4px;
+  }
+  .ficha.visible { display: block; }
+  .ficha-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .ficha-grid.full { grid-template-columns: 1fr; }
+  .dato {
+    background: var(--gris-bg);
+    border-radius: 7px;
+    padding: 9px 11px;
+    border-left: 3px solid var(--gris-line);
+  }
+  .dato.azul  { border-left-color: var(--azul);  background: var(--azul-light); }
+  .dato.rojo  { border-left-color: var(--rojo);  background: var(--rojo-light); }
+  .dato.verde { border-left-color: var(--verde); background: var(--verde-light); }
+  .dato.naranja{ border-left-color: var(--naranja); background: var(--naranja-light); }
+  .dato.warn  { border-left-color: #e67e22; background: #fef9f0; }
+  .dato-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--gris-med);
+    margin-bottom: 3px;
+  }
+  .dato-valor {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--negro);
+    line-height: 1.3;
+    word-break: break-word;
+  }
+  .dato-valor.nc { color: var(--gris-med); font-weight: 500; font-style: italic; font-size: 12px; }
+  .dato-valor.vencido { color: #c0392b; }
+  .dato-valor.proximo { color: #e67e22; }
+  .dato-valor.vigente { color: var(--verde); }
+
+  /* ── DIVIDER ────────────────────────────────────────────── */
+  .divider {
+    height: 1px;
+    background: var(--gris-line);
+    margin: 12px 0;
+  }
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--gris-med);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--gris-line);
+  }
+
+  /* ── BOTONES ────────────────────────────────────────────── */
+  .btn-group {
+    display: flex;
+    gap: 9px;
+    margin-top: 14px;
+  }
+  .btn {
+    flex: 1;
+    padding: 13px 10px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: transform 0.1s, opacity 0.1s;
+    -webkit-appearance: none;
+  }
+  .btn:active { transform: scale(0.97); opacity: 0.9; }
+  .btn-wsp {
+    background: #25D366;
+    color: white;
+  }
+  .btn-copy {
+    background: var(--gris-osc);
+    color: white;
+  }
+  .btn-reset {
+    background: var(--gris-bg);
+    color: var(--gris-med);
+    border: 1.5px solid var(--gris-line);
+    flex: 0 0 auto;
+    padding: 13px 14px;
+  }
+
+  /* ── OBSERVACIONES ──────────────────────────────────────── */
+  .obs-input {
+    width: 100%;
+    padding: 11px 12px;
+    border: 2px solid var(--gris-line);
+    border-radius: 8px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    resize: none;
+    color: var(--negro);
+    background: var(--gris-bg);
+    min-height: 70px;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  .obs-input:focus {
+    outline: none;
+    border-color: var(--gris-med);
+    background: white;
+  }
+
+  /* ── TOAST ──────────────────────────────────────────────── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--gris-osc);
+    color: white;
+    padding: 11px 22px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 999;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── SEMI TOGGLE ────────────────────────────────────────── */
+  .toggle-semi {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px;
+    background: var(--blanco);
+    border-radius: var(--radio);
+    box-shadow: var(--sombra);
+    margin-bottom: 14px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .toggle-semi.active { border-color: var(--rojo-osc); }
+  .toggle-semi-label {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gris-osc);
+  }
+  .toggle-semi-label .icon { font-size: 18px; }
+  .toggle-switch {
+    width: 44px;
+    height: 24px;
+    background: var(--gris-line);
+    border-radius: 12px;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .toggle-semi.active .toggle-switch { background: var(--rojo); }
+  .toggle-semi.active .toggle-switch::after { transform: translateX(20px); }
+
+  /* ── CHIP DE SELECCIÓN ──────────────────────────────────── */
+  .selected-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--gris-osc);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 5px 10px 5px 12px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    letter-spacing: 0.3px;
+  }
+  .chip-close {
+    background: rgba(255,255,255,0.25);
+    border: none;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  /* scrollbar */
+  .dropdown::-webkit-scrollbar { width: 4px; }
+  .dropdown::-webkit-scrollbar-track { background: #f0f0f0; }
+  .dropdown::-webkit-scrollbar-thumb { background: var(--gris-line); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-top">
+    <div class="logo-pill">Vila</div>
+    <div class="header-title">
+      <h1>Hoja de Ruta</h1>
+      <p>Transporte Vila · Tran Ser S.A.</p>
+    </div>
+    <div class="header-date" id="hdrDate"></div>
+  </div>
+  <div class="header-bar"></div>
+</header>
+
+<div class="content">
+
+  <!-- CHOFER -->
+  <div class="card">
+    <div class="card-header gris">
+      <span class="icon">👤</span>
+      <h2>Chofer</h2>
+      <span class="badge" id="badgeChofer">Sin seleccionar</span>
+    </div>
+    <div class="card-body">
+      <div class="search-wrap" id="wrapChofer">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="inputChofer"
+          placeholder="Buscar por apellido…" autocomplete="off" autocorrect="off" spellcheck="false">
+        <button class="clear-btn" id="clearChofer" onclick="clearField('Chofer')">✕</button>
+        <div class="dropdown" id="dropChofer"></div>
+      </div>
+      <div class="ficha" id="fichaChofer">
+        <div class="ficha-grid">
+          <div class="dato azul">
+            <div class="dato-label">DNI</div>
+            <div class="dato-valor" id="choDni">—</div>
+          </div>
+          <div class="dato azul">
+            <div class="dato-label">Teléfono</div>
+            <div class="dato-valor" id="choTel">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRACTOR -->
+  <div class="card">
+    <div class="card-header azul">
+      <span class="icon">🚛</span>
+      <h2>Unidad Tractor</h2>
+      <span class="badge" id="badgeTractor">Sin seleccionar</span>
+    </div>
+    <div class="card-body">
+      <div class="search-wrap" id="wrapTractor">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="inputTractor"
+          placeholder="Buscar patente o marca…" autocomplete="off" autocorrect="off" spellcheck="false">
+        <button class="clear-btn" id="clearTractor" onclick="clearField('Tractor')">✕</button>
+        <div class="dropdown" id="dropTractor"></div>
+      </div>
+      <div class="ficha" id="fichaTractor">
+        <div class="section-label">Identificación</div>
+        <div class="ficha-grid">
+          <div class="dato azul"><div class="dato-label">Tipo</div><div class="dato-valor" id="trTipo">—</div></div>
+          <div class="dato azul"><div class="dato-label">Año</div><div class="dato-valor" id="trAnio">—</div></div>
+        </div>
+        <div class="dato azul" style="margin-top:8px">
+          <div class="dato-label">Marca / Modelo</div>
+          <div class="dato-valor" id="trMarcaMod">—</div>
+        </div>
+        <div class="dato" style="margin-top:8px">
+          <div class="dato-label">Chasis</div>
+          <div class="dato-valor" id="trChasis" style="font-size:12px;font-family:monospace;letter-spacing:0.5px">—</div>
+        </div>
+        <div class="divider"></div>
+        <div class="section-label">Documentación</div>
+        <div class="ficha-grid">
+          <div class="dato"><div class="dato-label">Seguro</div><div class="dato-valor" id="trSeguro">—</div></div>
+          <div class="dato"><div class="dato-label">Póliza Nro</div><div class="dato-valor" id="trPoliza">—</div></div>
+        </div>
+        <div class="ficha-grid" style="margin-top:8px">
+          <div class="dato" id="datoVtoPolizaTr">
+            <div class="dato-label">Vto. Póliza</div>
+            <div class="dato-valor" id="trVtoPoliza">—</div>
+          </div>
+          <div class="dato" id="datoSenasaTr">
+            <div class="dato-label">SENASA Nro</div>
+            <div class="dato-valor" id="trSenasaNro">—</div>
+          </div>
+        </div>
+        <div class="dato" style="margin-top:8px" id="datoVtoSenasaTr">
+          <div class="dato-label">Vto. SENASA</div>
+          <div class="dato-valor" id="trVtoSenasa">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEMIRREMOLQUE TOGGLE -->
+  <div class="toggle-semi" id="toggleSemi" onclick="toggleSemiSection()">
+    <div class="toggle-semi-label">
+      <span class="icon">🚚</span>
+      <span>Agregar Semirremolque</span>
+    </div>
+    <div class="toggle-switch" id="switchSemi"></div>
+  </div>
+
+  <!-- SEMIRREMOLQUE CARD -->
+  <div class="card" id="cardSemi" style="display:none">
+    <div class="card-header rojo">
+      <span class="icon">🚚</span>
+      <h2>Semirremolque</h2>
+      <span class="badge" id="badgeSemi">Sin seleccionar</span>
+    </div>
+    <div class="card-body">
+      <div class="search-wrap" id="wrapSemi">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input rojo" id="inputSemi"
+          placeholder="Buscar patente o tipo…" autocomplete="off" autocorrect="off" spellcheck="false">
+        <button class="clear-btn" id="clearSemi" onclick="clearField('Semi')">✕</button>
+        <div class="dropdown" id="dropSemi"></div>
+      </div>
+      <div class="ficha" id="fichaSemi">
+        <div class="section-label">Identificación</div>
+        <div class="ficha-grid">
+          <div class="dato rojo"><div class="dato-label">Tipo</div><div class="dato-valor" id="smTipo">—</div></div>
+          <div class="dato rojo"><div class="dato-label">Año</div><div class="dato-valor" id="smAnio">—</div></div>
+        </div>
+        <div class="dato rojo" style="margin-top:8px">
+          <div class="dato-label">Marca / Modelo</div>
+          <div class="dato-valor" id="smMarcaMod">—</div>
+        </div>
+        <div class="dato" style="margin-top:8px">
+          <div class="dato-label">Chasis</div>
+          <div class="dato-valor" id="smChasis" style="font-size:12px;font-family:monospace;letter-spacing:0.5px">—</div>
+        </div>
+        <div class="divider"></div>
+        <div class="section-label">Documentación</div>
+        <div class="ficha-grid">
+          <div class="dato"><div class="dato-label">Seguro</div><div class="dato-valor" id="smSeguro">—</div></div>
+          <div class="dato"><div class="dato-label">Póliza Nro</div><div class="dato-valor" id="smPoliza">—</div></div>
+        </div>
+        <div class="ficha-grid" style="margin-top:8px">
+          <div class="dato" id="datoVtoPolizaSm">
+            <div class="dato-label">Vto. Póliza</div>
+            <div class="dato-valor" id="smVtoPoliza">—</div>
+          </div>
+          <div class="dato" id="datoSenasaSm">
+            <div class="dato-label">SENASA Nro</div>
+            <div class="dato-valor" id="smSenasaNro">—</div>
+          </div>
+        </div>
+        <div class="dato" style="margin-top:8px" id="datoVtoSenasaSm">
+          <div class="dato-label">Vto. SENASA</div>
+          <div class="dato-valor" id="smVtoSenasa">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OBSERVACIONES -->
+  <div class="card">
+    <div class="card-header gris">
+      <span class="icon">📝</span>
+      <h2>Observaciones</h2>
+    </div>
+    <div class="card-body">
+      <textarea class="obs-input" id="obsInput" placeholder="Origen, destino, mercadería, instrucciones…" rows="3"></textarea>
+    </div>
+  </div>
+
+  <!-- BOTONES -->
+  <div class="btn-group">
+    <button class="btn btn-wsp" onclick="compartirWhatsApp()">
+      <span style="font-size:18px">💬</span> WhatsApp
+    </button>
+    <button class="btn btn-copy" onclick="copiarTexto()">
+      <span style="font-size:16px">📋</span> Copiar
+    </button>
+    <button class="btn btn-reset" onclick="resetAll()" title="Limpiar todo">🗑️</button>
+  </div>
+
+</div><!-- /content -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATOS ─────────────────────────────────────────────────────────────────────
+const DB = {"choferes":[{"nombre":"Acosta, Sebastian","dni":"36.193.660","tel":"3794-743276"},{"nombre":"Aguirre, Leonardo Joaquin","dni":"32.350.903","tel":"3794117255"},{"nombre":"Alegre, Agustin","dni":"42.061.771","tel":"3794281904"},{"nombre":"Aquino, Paredes","dni":"1.542.018","tel":"595-891-222399"},{"nombre":"Arener, Federico","dni":"36.468.808","tel":"3795-023811"},{"nombre":"Arguello, Daniel","dni":"28.090.047","tel":"379-4317989"},{"nombre":"Barenfaller, Omar Eduardo","dni":"16.039.185","tel":"3496414316"},{"nombre":"Barrios, Wilfredo","dni":"28.302.906","tel":"3794-315057"},{"nombre":"Bernald, Gustavo","dni":"32.920.297","tel":"3794 27-8012"},{"nombre":"Blanco, Arnaldo Andres","dni":"31.255.230","tel":"3795-348529"},{"nombre":"Bordas, Jaime","dni":"23.742.386","tel":"3794 83-3633"},{"nombre":"Brito, Facundo Hernan","dni":"36.536.141","tel":"3794732172"},{"nombre":"Cabral, Ariel","dni":"4.423.314","tel":"595 985 935633"},{"nombre":"Caceres, Jose Luis","dni":"27.324.124","tel":"364 471-4142"},{"nombre":"Cardozo, Blas","dni":"4.054.792","tel":"595-982-584729"},{"nombre":"Ceijas, Alberto","dni":"20.593.920","tel":"11-63748985"},{"nombre":"Ceijas, Marcos","dni":"44.108.977","tel":"1151256540"},{"nombre":"Cukla Alexis Rafael","dni":"45.455.678","tel":"3878 35-7886"},{"nombre":"Dominguez. Luis","dni":"32.516.481","tel":"3777 23-4200"},{"nombre":"Escalante, Martin","dni":"34.165.421","tel":"3794 61-1076"},{"nombre":"Falcon, Sixto Raul","dni":"20.266.751","tel":"3794 61-6993"},{"nombre":"Fernandez, Favio Jesus","dni":"30.518.376","tel":"3794-201968"},{"nombre":"Franco, Hector Pablo S.","dni":"26.150.009","tel":"3794-851620"},{"nombre":"Frette, Ricardo","dni":"20.999.096","tel":"3794-512751"},{"nombre":"Gaitan, Julio","dni":"29.641.113","tel":"3794-908893"},{"nombre":"Gomez, Gustavo","dni":"29.217.195","tel":"3543 55-3592"},{"nombre":"Gomez, Marcos","dni":"41.117.529","tel":"3795 01-9964"},{"nombre":"Gonzalez, Cristian Andres","dni":"37.800.646","tel":"3794008987"},{"nombre":"Gonzalez, Francisco","dni":"38.714.601","tel":"3795 01-9964"},{"nombre":"Guerrero, Hector","dni":"23.990.412","tel":"3794 02-3799"},{"nombre":"Hamm, Luis","dni":"30.810.518","tel":"3794 62-3997"},{"nombre":"Justel, Miguel","dni":"25.149.617","tel":"1164579105"},{"nombre":"Lopez, Alfredo","dni":"27.870.645","tel":"3794 01-0766"},{"nombre":"Lufiego, Hector Hernan","dni":"20.190.775","tel":"3492 61-5088"},{"nombre":"Maidana, Gabriel Adolfo","dni":"37.393.244","tel":"37945-309352"},{"nombre":"Martinez, Miguel","dni":"21.914.891","tel":"3794 22-6852"},{"nombre":"Mendez, Victor","dni":"4.423.314","tel":"595-994-271760"},{"nombre":"Merlo, Marcos","dni":"28.903.806","tel":"3794 28-5286"},{"nombre":"Monzon, Leandro David","dni":"36.193.649","tel":"3794-577563"},{"nombre":"Navarro, Juan eugenio","dni":"27.630.316","tel":"3794-046420"},{"nombre":"Navarro, Ramon Ariel","dni":"34.207.977","tel":"3795-021930"},{"nombre":"Nechea, Gustavo Ariel","dni":"27.813.823","tel":"3435-122526"},{"nombre":"Ojeda, Horacio Basilio","dni":"24.630.167","tel":"3430503 3789"},{"nombre":"Ojeda, Walter Alberto","dni":"30.764.665","tel":"3435013385"},{"nombre":"Oronas, Manuel","dni":"32.726.275","tel":"3492248516"},{"nombre":"Piñeyro, Antonio","dni":"18.324.820","tel":"3794 04-2782"},{"nombre":"Solari, Lucas","dni":"38.235.345","tel":"3794341328"},{"nombre":"Sotelo, Manuel","dni":"43.785.856","tel":"3794 59-8839"},{"nombre":"Soto, Miguel Angel","dni":"21.363.718","tel":"3794-558788"},{"nombre":"Tovias, Ariel Arnaldo","dni":"30.567.248","tel":"3491536677"},{"nombre":"Veron Gamarra, Fredy Ramon","dni":"4.982.377","tel":"595 992 281903"},{"nombre":"Vila, Gonzalo","dni":"21.827.263","tel":""},{"nombre":"Vila, Mariano","dni":"45.645.747","tel":""},{"nombre":"Zacarias, Gabriel Eduardo","dni":"39.186.747","tel":"3795-060714"}],"tractores":[{"patente":"AAAU354","tipo":"TRACTOR","marca":"SCANIA","modelo":"","anio":"2012","chasis":"","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AAAU355","tipo":"TRACTOR","marca":"SCANIA","modelo":"2008","anio":"2007","chasis":"2021","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AAAU356","tipo":"TRACTOR","marca":"SCANIA","modelo":"","anio":"2014","chasis":"","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AB059AT","tipo":"CAMIONETA","marca":"TOYOTA","modelo":"HILUX 4X2 C/S DX PACK 2.5 TDI-D3 CON CAJA FRIO","anio":"2017","chasis":"8AJCR32G4E0018134","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AB620QF","tipo":"TRACTOR","marca":"SCANIA","modelo":"G 360 4X2","anio":"2018","chasis":"9BSG4X200H3900983","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AC875MO","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"G 360 4X2","anio":"2018","chasis":"9BSG4X200J3919517","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AC875MP","tipo":"TRACTOR","marca":"SCANIA","modelo":"G 360 4X2","anio":"2018","chasis":"9BSG4X200J3919486","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AE031SF","tipo":"TRACTOR","marca":"MERCEDES BENZ","modelo":"AXOR 1933 S","anio":"2019","chasis":"9BM958207KB103430","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AE031SH","tipo":"TRACTOR","marca":"MERCEDES BENZ","modelo":"AXOR 1933 S","anio":"2019","chasis":"9BM958207KB103448","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AE115DH","tipo":"VEHICULO PARTICULAR","marca":"TOYOTA","modelo":"HILUX 4X2 D/C SRX 2.8 TDI 6 A/T","anio":"2020","chasis":"8AJAA3DD3L1234808","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AE214CQ","tipo":"CHASIS TERMICO","marca":"MERCEDES BENZ","modelo":"ATEGO 1721","anio":"2020","chasis":"8AB958154LA802189","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-329768","vtoSenasa":"08/05/2029"},{"patente":"AE318UJ","tipo":"BALANCIN","marca":"SCANIA","modelo":"P 280 6X2","anio":"2020","chasis":"9BSP6X200L3950268","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-335233","vtoSenasa":"05/07/2026"},{"patente":"AE355XL","tipo":"CHASIS TERMICO","marca":"MERCEDES BENZ","modelo":"ACCELO 1016/39","anio":"2020","chasis":"8AB979076LA900649","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"2-340194","vtoSenasa":"14/09/2026"},{"patente":"AE633YA","tipo":"BALANCIN","marca":"MERCEDES BENZ","modelo":"ATEGO 2426","anio":"2021","chasis":"9BM958164MB183139","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-353523","vtoSenasa":"19/01/2027"},{"patente":"AE633YK","tipo":"TRACTOR","marca":"SCANIA","modelo":"G 360 4X2","anio":"2021","chasis":"9BSG4X200M3978804","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AE876UY","tipo":"VEHICULO PARTICULAR","marca":"TOYOTA","modelo":"HILUX 4X2 DC DX 2.4 TDI 6 MT","anio":"2021","chasis":"8AJCB3DD4M3903969","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AF357MU","tipo":"VEHICULO PARTICULAR","marca":"TOYOTA","modelo":"ETIOS XLS PACK 1.5 4A/T","anio":"2022","chasis":"9BRK29BT2N0224644","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AF377VL","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"G 450 6X2","anio":"2022","chasis":"9BSG6X200N4010728","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AF516CR","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"R 410 6X2","anio":"2022","chasis":"9BSR6X200N4019245","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AF895HA","tipo":"VEHICULO PARTICULAR","marca":"TOYOTA","modelo":"HILUX 4X2 DC SRX 2.8 TDI 6 AT","anio":"2023","chasis":"8AJAA3DD8P1244899","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AG040CT","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"G 410 6X2","anio":"2023","chasis":"9BSG6X200P4042837","seguro":"LA SEGUNDA","poliza":"58.717.869","vtoPoliza":"16/06/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AG171WM","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"G 360 6X2","anio":"2023","chasis":"9BSG6X200R4046150","seguro":"LA SEGUNDA","poliza":"58.754.923","vtoPoliza":"10/08/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AG328AY","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"G 450 6X2","anio":"2023","chasis":"9BSG6X200R4043025","seguro":"ZURICH","poliza":"90401342504","vtoPoliza":"16/11/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AG646UM","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"G 450 6X2","anio":"2024","chasis":"9BSG6X200++R4066502","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AG646UT","tipo":"VEHICULO PARTICULAR","marca":"TOYOTA","modelo":"HILUX L/21 2.8 DC 4X4 TDI SR AT6","anio":"2024","chasis":"8AJKA3CDXR3128021","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AG646UX","tipo":"VEHICULO PARTICULAR","marca":"TOYOTA","modelo":"HILUX L/21 2.8 DC 4X4 TDI SR AT6","anio":"2024","chasis":"8AJKA3CD5R3124796","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AG804GZ","tipo":"CHASIS TERMICO","marca":"MERCEDES BENZ","modelo":"ATEGO 1721/48","anio":"2024","chasis":"8AB958154SA807118","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"2-454620","vtoSenasa":"24/10/2027"},{"patente":"AG829LI","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"G 450 6X2","anio":"2024","chasis":"+9BSG6X200++S4073444+","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AG883RT","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"G 450 6X2","anio":"2024","chasis":"9BSG6X200S4073439","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AGW034","tipo":"VOLCADOR","marca":"MERCEDES BENZ","modelo":"MB L 1214 / 48","anio":"1995","chasis":"9BM384003RB012053","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"2-107136","vtoSenasa":"16/01/2027"},{"patente":"AH211YW","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"R 460 A6X2 SUPER","anio":"2025","chasis":"9BSR6X200++S4085004","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AH438JA","tipo":"CHASIS TERMICO","marca":"MERCEDES BENZ","modelo":"ATEGO 1721 48 AMT","anio":"2025","chasis":"8AB951501SA906333","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-472176","vtoSenasa":"26/06/2028"},{"patente":"AH794IY","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"R420 A6X2 SUPER","anio":"2025","chasis":"9BSR6X200++T4102331","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AH827HL","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"R420 A6X2 SUPER","anio":"2025","chasis":"9BSR6X200++T4102370","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AH862DB","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"R420 A6X2 SUPER","anio":"2025","chasis":"9BSR6X200++T4099919","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AH862DC","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"R420 A6X2 SUPER","anio":"2025","chasis":"9BSR6X200++T4099818","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AMZ150","tipo":"CHASIS TERMICO","marca":"MERCEDES BENZ","modelo":"MB L 913","anio":"1995","chasis":"9BM6881295B061463","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"2-130519","vtoSenasa":"05/07/2026"},{"patente":"BGO158","tipo":"CHASIS","marca":"MERCEDES BENZ","modelo":"MB L 710","anio":"1997","chasis":"8AC688152VA123184","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"2-196335","vtoSenasa":"23/12/2026"},{"patente":"BOH699","tipo":"TRACTOR","marca":"SCANIA","modelo":"1999","anio":"1998","chasis":"2017","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"BOH702","tipo":"TRACTOR","marca":"SCANIA","modelo":"","anio":"1999","chasis":"","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"BOH705","tipo":"TRACTOR","marca":"SCANIA","modelo":"2014","anio":"1998","chasis":"2015","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"BOH708","tipo":"TRACTOR","marca":"SCANIA","modelo":"2012","anio":"1998","chasis":"2015","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"BYT986","tipo":"TRACTOR","marca":"SCANIA","modelo":"1998","anio":"2006","chasis":"","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"BZH961","tipo":"TRACTOR","marca":"SCANIA","modelo":"","anio":"2008","chasis":"","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"DBY63","tipo":"TRACTOR AGRICOLA","marca":"JOHN DEERE","modelo":"5090","anio":"2016","chasis":"1J05090EKH0011221","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"NO"},{"patente":"IBG854","tipo":"CHASIS TERMICO","marca":"VOLKSWAGEN","modelo":"17220","anio":"2009","chasis":"9BWC782T09R903410","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-106331","vtoSenasa":"26/01/2027"},{"patente":"JKR265","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"G 340 6X2","anio":"2010","chasis":"9BSG4X200B3669675","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"JXS462","tipo":"TRACTOR","marca":"SCANIA","modelo":"G 340 4X2","anio":"2011","chasis":"9BSG4X200B3678681","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"KHA702","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"G 340 6X2","anio":"2011","chasis":"9BSG4X200C3687750","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"KPS479","tipo":"TRACTOR","marca":"SCANIA","modelo":"G 340 4X2","anio":"2011","chasis":"9BSG4X200C3692371","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"KRE799","tipo":"TRACTOR","marca":"VOLKSWAGEN","modelo":"17220","anio":"2011","chasis":"9533782T9CR201681","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"KTZ123","tipo":"CHASIS TERMICO","marca":"MERCEDES BENZ","modelo":"ATEGO 1418","anio":"2012","chasis":"9BM958034CB806655","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"2-108788","vtoSenasa":"12/01/2027"},{"patente":"KTZ128","tipo":"TRACTOR 6x2","marca":"MERCEDES BENZ","modelo":"AXOR 1933 S","anio":"2012","chasis":"9BM958207CB833029","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"KUBOTA","tipo":"TRACTOR AGRICOLA","marca":"KUBOTA","modelo":"B2401D","anio":"2024","chasis":"","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"LDU042","tipo":"TRACTOR","marca":"SCANIA","modelo":"G 340 4X2","anio":"2012","chasis":"9BSG4X200C3801082","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"MJF808","tipo":"TRACTOR","marca":"SCANIA","modelo":"G 360 4X2","anio":"2013","chasis":"9BSG4X200D3824564","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"MLM974","tipo":"CHASIS TERMICO","marca":"MERCEDES BENZ","modelo":"710","anio":"2013","chasis":"9BM688159DB879451","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"2-144273","vtoSenasa":"16/01/2027"},{"patente":"MLM989","tipo":"CHASIS TERMICO","marca":"MERCEDES BENZ","modelo":"710","anio":"2013","chasis":"9BM688159DB879015","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-353514","vtoSenasa":"16/01/2027"},{"patente":"MOK606","tipo":"CHASIS","marca":"MERCEDES BENZ","modelo":"710","anio":"2013","chasis":"9BM688159DB879801","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-144272","vtoSenasa":"15/07/2026"},{"patente":"MOK621","tipo":"TRACTOR","marca":"SCANIA","modelo":"G 360 4X2","anio":"2013","chasis":"9BSG4X200D3828782","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"MWT867","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"G 360 6X2","anio":"2013","chasis":"9BSG4X200D3823197","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"NKK571","tipo":"BALANCIN","marca":"VOLKSWAGEN","modelo":"17220","anio":"2014","chasis":"9533782T7ER341148","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"2-387166","vtoSenasa":"01/04/2029"},{"patente":"OME548","tipo":"BALANCIN","marca":"SCANIA","modelo":"P 250 6X2","anio":"2014","chasis":"9BSP6X200E3851363","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-172320","vtoSenasa":"14/11/2026"},{"patente":"OOJ936","tipo":"CHASIS TERMICO","marca":"MERCEDES BENZ","modelo":"ATEGO 1418","anio":"2015","chasis":"9BM958034FB976704","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"2-170507","vtoSenasa":"04/12/2026"},{"patente":"OOJ967","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"G 360 6X2","anio":"2015","chasis":"9BSG4X200F3860159","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"OOJ968","tipo":"TRACTOR 6x2","marca":"SCANIA","modelo":"G 360 6X2","anio":"2015","chasis":"9BSG4X200F3868465","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"OPL041","tipo":"BALANCIN","marca":"VOLKSWAGEN","modelo":"17220","anio":"2015","chasis":"9533782T7ER431402","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"2-182536","vtoSenasa":"05/07/2026"},{"patente":"OWS457","tipo":"CHASIS","marca":"MERCEDES BENZ","modelo":"710","anio":"2015","chasis":"9BM688159FB989059","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-410357","vtoSenasa":"07/10/2026"},{"patente":"PCK412","tipo":"TRACTOR","marca":"SCANIA","modelo":"G 310 4X2","anio":"2015","chasis":"9BSG4X200G3877383","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"PEB523","tipo":"TRACTOR","marca":"SCANIA","modelo":"G 310 4X2","anio":"2015","chasis":"9BSG4X200G3877554","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"SUB085","tipo":"VOLCADOR","marca":"MERCEDES BENZ","modelo":"1114","anio":"1970","chasis":"RPA324831","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"}],"semis":[{"patente":"AAAU179","tipo":"SEMI BARANDA","marca":"RANDON","modelo":"2015","anio":"2015","chasis":"","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AB059AU","tipo":"FURGON","marca":"LAMBERT","modelo":"S12IP","anio":"2017","chasis":"8E9S0133DGA314419","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-235298","vtoSenasa":"26/01/2027"},{"patente":"AB059AV","tipo":"FURGON","marca":"LAMBERT","modelo":"S12IP","anio":"2017","chasis":"8E9S0133DHA314006","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-252524","vtoSenasa":"05/07/2026"},{"patente":"AE379VG","tipo":"SIDER","marca":"HERMANN","modelo":"PALETERO S.PA.3E.71 2+1","anio":"2020","chasis":"8EHSPA3E0LA000440","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-340208","vtoSenasa":"10/09/2026"},{"patente":"AE379VH","tipo":"SIDER","marca":"HERMANN","modelo":"PALETERO S.PA.3E.71 2+1","anio":"2020","chasis":"8EHSPA3E0LA000439","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-345073","vtoSenasa":"21/10/2026"},{"patente":"AE379VI","tipo":"SIDER","marca":"HERMANN","modelo":"PALETERO S.PA.3E.71 2+1","anio":"2020","chasis":"8EHSPA3E0LA000438","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-340206","vtoSenasa":"08/09/2026"},{"patente":"AF144FU","tipo":"SIDER","marca":"MIC","modelo":"SEMIRREMOLQUE DE TRES EJES","anio":"2022","chasis":"8B9S02333MT365082","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-380291","vtoSenasa":"04/03/2027"},{"patente":"AF250GH","tipo":"BARANDA ESCALABLE","marca":"MIC","modelo":"SEMIRREMOLQUE DE TRES EJES","anio":"2022","chasis":"8B9S02433NT365002","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-383042","vtoSenasa":"29/01/2027"},{"patente":"AF257OR","tipo":"FURGON","marca":"BONANO","modelo":"SEMIRREMOLQUE TERMICO DE 3 TANDEM.","anio":"2022","chasis":"8CB3STZZZNB000031","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-387162","vtoSenasa":"01/04/2029"},{"patente":"AF325II","tipo":"BATEA","marca":"SALTO","modelo":"BATEA","anio":"2022","chasis":"8AAB0993CM0020033","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AF336MN","tipo":"FURGON","marca":"BONANO","modelo":"SEMIRREMOLQUE TERMICO DE 3 TANDEM.","anio":"2022","chasis":"8CB3STZZZMB000201","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-389326","vtoSenasa":"08/05/2029"},{"patente":"AF336MO","tipo":"FURGON","marca":"BONANO","modelo":"SEMIRREMOLQUE TERMICO DE 3 TANDEM.","anio":"2022","chasis":"8CB3STZZZNB000202","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-389326","vtoSenasa":"08/05/2029"},{"patente":"AF357MV","tipo":"BARANDA ESCALABLE","marca":"HERMANN","modelo":"SEMIRREMOLQUE TERMICO DE 2 EJES TANDEM + 1 EJE DIR","anio":"2022","chasis":"8EHSBV3E0NA000253","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-391541","vtoSenasa":"07/07/2026"},{"patente":"AF357MW","tipo":"BARANDA ESCALABLE","marca":"HERMANN","modelo":"SEMIRREMOLQUE TERMICO DE 2 EJES TANDEM + 1 EJE DIR","anio":"2022","chasis":"8EHSBV3E0NA000251","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-392945","vtoSenasa":"05/07/2026"},{"patente":"AF577WL","tipo":"FURGON","marca":"BONANO","modelo":"SEMIRREMOLQUE TERMICO DE 3 TANDEM.","anio":"2022","chasis":"8CB3STZZZNB000237","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-402122","vtoSenasa":"18/10/2026"},{"patente":"AF773UU","tipo":"FURGON","marca":"BONANO","modelo":"SEMIRREMOLQUE TERMICO DE 3 TANDEM.","anio":"2023","chasis":"8CB4STZZZNB000681","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-410358","vtoSenasa":"29/01/2029"},{"patente":"AF773UV","tipo":"FURGON","marca":"BONANO","modelo":"SEMIRREMOLQUE TERMICO DE 2 EJES TANDEM + 1 EJE DIR","anio":"2023","chasis":"8CB4STZZZNB000676","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-409641","vtoSenasa":"16/01/2027"},{"patente":"AF788UH","tipo":"FURGON","marca":"ASTPRA","modelo":"SEMIRREMOLQUE DE TRES EJES","anio":"2023","chasis":"8CB4STZZZNB000677","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"2-410354","vtoSenasa":"29/01/2029"},{"patente":"AF799QF","tipo":"FURGON","marca":"ASTPRA","modelo":"SEMIRREMOLQUE DE TRES EJES","anio":"2023","chasis":"8E9298770PS238005","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-409996","vtoSenasa":"29/01/2029"},{"patente":"AF976AT","tipo":"SIDER","marca":"HERMANN","modelo":"PALETERO S.PA.3E.71 2+1","anio":"2023","chasis":"8EHSPA3E0PA000196","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-417421","vtoSenasa":"12/05/2026"},{"patente":"AF976AZ","tipo":"FURGON","marca":"BONANO","modelo":"SEMIRREMOLQUE TERMICO DE 2 EJES TANDEM + 1 EJE DIR","anio":"2023","chasis":"8CB4STZZZNB000727","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-418434","vtoSenasa":"07/06/2026"},{"patente":"AG027EU","tipo":"FURGON","marca":"BONANO","modelo":"SEMIRREMOLQUE TERMICO DE 2 EJES TANDEM + 1 EJE DIR","anio":"2023","chasis":"8CB4STZZZPB000052","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-419540","vtoSenasa":"22/06/2026"},{"patente":"AG027EW","tipo":"FURGON","marca":"BONANO","modelo":"SEMIRREMOLQUE TERMICO DE 2 EJES TANDEM + 1 EJE DIR","anio":"2023","chasis":"8CB4STWZZNB000728","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-419537","vtoSenasa":"22/06/2026"},{"patente":"AG473MN","tipo":"SIDER","marca":"HERMANN","modelo":"BU-PALETERO S.PA.3E.71 2+1","anio":"2024","chasis":"8EHSPA3E0PA000866","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-439427","vtoSenasa":"01/04/2027"},{"patente":"AG772CQ","tipo":"SIDER","marca":"HERMANN","modelo":"BU-PALETERO S.PA.3E.71 2+1","anio":"2024","chasis":"8EHSPA3E0PA000790","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-452382","vtoSenasa":"30/09/2026"},{"patente":"AG917LI","tipo":"CARRETON","marca":"STAHL","modelo":"AA5400 ACOPLADO CARRETON","anio":"2024","chasis":"8B9AA5400RALT1477","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AH143JX","tipo":"BATEA","marca":"PATRONELLI","modelo":"SEM V21","anio":"2025","chasis":"8B9SVT5AMSA030011","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AH160NL","tipo":"FURGON","marca":"RANDON","modelo":"SR. FG.  02+01","anio":"2025","chasis":"9ADRSRA3FSC021959","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-462864","vtoSenasa":"18/02/2028"},{"patente":"AH248KX","tipo":"SIDER","marca":"HERMANN","modelo":"3E.71 2+1","anio":"2025","chasis":"8EHSPA3E0SA000058","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-464590","vtoSenasa":"16/03/2027"},{"patente":"AH248LH","tipo":"FURGON","marca":"RANDON","modelo":"SR. FG.  02+01","anio":"2025","chasis":"9ADRSRA3FSC021306","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-464593","vtoSenasa":"17/03/2028"},{"patente":"AH340WO","tipo":"BATEA","marca":"SOLA Y BRUSA","modelo":"VOLCADOR 3 EJES","anio":"2025","chasis":"8BAG1053HS1000068","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"AH478DQ","tipo":"SIDER","marca":"HERMANN","modelo":"BU-PALETERO S.PA.3E.71 2+1","anio":"2025","chasis":"8EHSPA3E0SA000261","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-473274","vtoSenasa":"11/07/2026"},{"patente":"AH478DR","tipo":"FURGON","marca":"RANDON","modelo":"SR. FG.  02+01","anio":"2025","chasis":"9ADRSRA3FSC022832","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-471539","vtoSenasa":"18/06/2028"},{"patente":"AH478DS","tipo":"FURGON","marca":"RANDON","modelo":"SR. FG.  02+01","anio":"2025","chasis":"9ADRSRA3FSC022833","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-481177","vtoSenasa":"07/10/2028"},{"patente":"BLZ 536","tipo":"SEMI BARANDA","marca":"SULMETAL","modelo":"1998","anio":"2015","chasis":"","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"BLZ534","tipo":"SEMI BARANDA","marca":"SULMETAL","modelo":"2007","anio":"2015","chasis":"2017","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"CDY 814","tipo":"SIDER","marca":"NOMA","modelo":"2017","anio":"2015","chasis":"","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"CDY 815","tipo":"SIDER","marca":"NOMA","modelo":"2015","anio":"2015","chasis":"","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"CDY425","tipo":"SIDER","marca":"NOMA","modelo":"1999","anio":"2015","chasis":"","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"DBY37","tipo":"RETRO EXCAVADORA","marca":"NEW HOLLAND","modelo":"B90","anio":"2020","chasis":"HBZNLB90KGAH16234","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"NO"},{"patente":"HAL 151","tipo":"SIDER","marca":"NOMA","modelo":"2015","anio":"2016","chasis":"","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"HAL 152","tipo":"SIDER","marca":"NOMA","modelo":"2015","anio":"2016","chasis":"","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"HBZ510","tipo":"SIDER","marca":"NOMA","modelo":"","anio":"2017","chasis":"","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"KGC764","tipo":"FURGON","marca":"RANDON","modelo":"SEMIRREMOLQUE FURGON FRIGORIFICO","anio":"2011","chasis":"9ADRSRA3FBM330152","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-117060","vtoSenasa":"05/07/2026"},{"patente":"KOMATSU","tipo":"RETRO EXCAVADORA","marca":"KOMATSU","modelo":"REROEXCAVADORA","anio":"2025","chasis":"","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"LYV768","tipo":"BARANDA","marca":"HERMANN","modelo":"SEMIRREMOLQUE BARANDA VOLCABLE","anio":"2012","chasis":"8EHSBV3E0CA001317","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-167165","vtoSenasa":"07/07/2026"},{"patente":"MAY144","tipo":"BARANDA","marca":"HERMANN","modelo":"SEMIRREMOLQUE BARANDA VOLCABLE","anio":"2013","chasis":"8EHSBV3E0CA001308","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-137628","vtoSenasa":"13/10/2026"},{"patente":"NAN729","tipo":"BARANDA","marca":"HERMANN","modelo":"SEMIRREMOLQUE BARANDA VOLCABLE","anio":"2013","chasis":"8EHSBV3E0DA000997","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-133777","vtoSenasa":"30/09/2026"},{"patente":"NAN730","tipo":"BARANDA","marca":"HERMANN","modelo":"SEMIRREMOLQUE BARANDA VOLCABLE","anio":"2013","chasis":"8EHSBV3E0DA000998","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-133784","vtoSenasa":"30/09/2026"},{"patente":"NKK575","tipo":"BARANDA","marca":"HERMANN","modelo":"S.BV.3E.67","anio":"2014","chasis":"8EHSBV3E0EA000012","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-139240","vtoSenasa":"12/01/2027"},{"patente":"NZD909","tipo":"FURGON","marca":"LAMBERT","modelo":"SEMIRREMOLQUE ISOTERMICO 2+1","anio":"2014","chasis":"8E9S0133DEA314174","seguro":"SANCOR SEGUROS","poliza":"13602233","vtoPoliza":"30/07/2026","senasaNro":"2-156981","vtoSenasa":"05/07/2026"},{"patente":"OOJ939","tipo":"FURGON","marca":"LAMBERT","modelo":"S12IP","anio":"2015","chasis":"8E9S0133DFA314083","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-170509","vtoSenasa":"25/10/2026"},{"patente":"OOJ940","tipo":"FURGON","marca":"LAMBERT","modelo":"SEMIRREMOLQUE ISOTERMICO 2+1","anio":"2015","chasis":"8E9S0133DFA314084","seguro":"SANCOR SEGUROS","poliza":"13590402","vtoPoliza":"30/07/2026","senasaNro":"2-170511","vtoSenasa":"09/11/2026"},{"patente":"ROZ721","tipo":"FURGON","marca":"HELVETICA","modelo":"","anio":"1990","chasis":"","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"},{"patente":"SIU399","tipo":"FURGON","marca":"SOLA Y BRUSA","modelo":"SEMIRREMOLQUE PLAYO","anio":"1983","chasis":"5304","seguro":"","poliza":"","vtoPoliza":"","senasaNro":"No corresponde","vtoSenasa":"No corresponde"}]};
+
+// ── ESTADO ────────────────────────────────────────────────────────────────────
+let state = { chofer: null, tractor: null, semi: null, semiEnabled: false };
+
+// ── FECHA ─────────────────────────────────────────────────────────────────────
+function setDate() {
+  const d = new Date();
+  const dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  document.getElementById('hdrDate').innerHTML =
+    `${dias[d.getDay()]}<br>${d.getDate()} ${meses[d.getMonth()]}`;
+}
+setDate();
+
+// ── VENCIMIENTO COLOR ────────────────────────────────────────────────────────
+function dateClass(dateStr) {
+  if (!dateStr || dateStr === 'No corresponde' || dateStr === 'NO') return '';
+  const parts = dateStr.split('/');
+  if (parts.length !== 3) return '';
+  const d = new Date(+parts[2], +parts[1]-1, +parts[0]);
+  const now = new Date(); now.setHours(0,0,0,0);
+  const diff = (d - now) / 86400000;
+  if (diff < 0)   return 'vencido';
+  if (diff <= 30) return 'proximo';
+  return 'vigente';
+}
+
+// ── BÚSQUEDA GENÉRICA ────────────────────────────────────────────────────────
+function setupSearch(inputId, dropId, data, keyFn, subFn, onSelect) {
+  const input = document.getElementById(inputId);
+  const drop  = document.getElementById(dropId);
+  const clearBtn = document.getElementById('clear' + inputId.replace('input',''));
+
+  function render(query) {
+    const q = query.toLowerCase().trim();
+    const results = q.length === 0
+      ? data.slice(0, 60)
+      : data.filter(r => keyFn(r).toLowerCase().includes(q)).slice(0, 40);
+
+    if (results.length === 0) {
+      drop.innerHTML = `<div class="dd-empty">Sin resultados para "${query}"</div>`;
+    } else {
+      drop.innerHTML = results.map(r => {
+        const key = keyFn(r);
+        const sub = subFn(r);
+        return `<div class="dd-item" ontouchstart="this.classList.add('highlighted')"
+          ontouchend="this.classList.remove('highlighted')"
+          onclick="selectItem('${inputId}', '${JSON.stringify(r).replace(/'/g,"&#39;").replace(/"/g,'&quot;')}')">
+          <span>${key}</span>
+          ${sub ? `<span class="dd-sub">${sub}</span>` : ''}
+        </div>`;
+      }).join('');
+    }
+    drop.classList.add('open');
+  }
+
+  input.addEventListener('input', () => {
+    clearBtn.style.display = input.value ? 'flex' : 'none';
+    render(input.value);
+  });
+  input.addEventListener('focus', () => { render(input.value); });
+  document.addEventListener('click', (e) => {
+    if (!input.closest('.search-wrap').contains(e.target)) {
+      drop.classList.remove('open');
+    }
+  });
+}
+
+// Guardar callbacks de selección
+const selectCallbacks = {};
+
+function selectItem(inputId, dataStr) {
+  const data = JSON.parse(dataStr.replace(/&quot;/g, '"').replace(/&#39;/g, "'"));
+  if (selectCallbacks[inputId]) selectCallbacks[inputId](data);
+  document.getElementById(inputId.replace('input','drop')).classList.remove('open');
+}
+
+// ── CHOFER ────────────────────────────────────────────────────────────────────
+setupSearch('inputChofer', 'dropChofer', DB.choferes,
+  r => r.nombre,
+  r => r.dni,
+  null
+);
+selectCallbacks['inputChofer'] = (ch) => {
+  state.chofer = ch;
+  document.getElementById('inputChofer').value = ch.nombre;
+  document.getElementById('clearChofer').style.display = 'flex';
+  document.getElementById('choDni').textContent = ch.dni || '—';
+  document.getElementById('choTel').textContent = ch.tel || '—';
+  document.getElementById('fichaChofer').classList.add('visible');
+  document.getElementById('badgeChofer').textContent = ch.nombre.split(',')[0];
+};
+
+// ── TRACTOR ───────────────────────────────────────────────────────────────────
+setupSearch('inputTractor', 'dropTractor', DB.tractores,
+  r => r.patente,
+  r => `${r.tipo} · ${r.marca}`,
+  null
+);
+selectCallbacks['inputTractor'] = (tr) => {
+  state.tractor = tr;
+  document.getElementById('inputTractor').value = tr.patente;
+  document.getElementById('clearTractor').style.display = 'flex';
+  document.getElementById('trTipo').textContent = tr.tipo || '—';
+  document.getElementById('trAnio').textContent = tr.anio || '—';
+  document.getElementById('trMarcaMod').textContent = [tr.marca, tr.modelo].filter(Boolean).join(' · ') || '—';
+  document.getElementById('trChasis').textContent = tr.chasis || '—';
+  document.getElementById('trSeguro').textContent = tr.seguro || '—';
+  document.getElementById('trPoliza').textContent = tr.poliza || '—';
+
+  const vtoP = tr.vtoPoliza;
+  const vtoSEl = document.getElementById('trVtoPoliza');
+  vtoSEl.textContent = vtoP || '—';
+  vtoSEl.className = 'dato-valor ' + dateClass(vtoP);
+
+  const sNro = tr.senasaNro;
+  const sNroEl = document.getElementById('trSenasaNro');
+  sNroEl.textContent = sNro;
+  sNroEl.className = 'dato-valor' + (sNro === 'No corresponde' ? ' nc' : '');
+
+  const vtoSen = tr.vtoSenasa;
+  const vtoSenEl = document.getElementById('trVtoSenasa');
+  vtoSenEl.textContent = vtoSen;
+  vtoSenEl.className = 'dato-valor' + (vtoSen === 'No corresponde' ? ' nc' : (' ' + dateClass(vtoSen)));
+
+  document.getElementById('fichaTractor').classList.add('visible');
+  document.getElementById('badgeTractor').textContent = tr.patente;
+};
+
+// ── SEMIRREMOLQUE ─────────────────────────────────────────────────────────────
+setupSearch('inputSemi', 'dropSemi', DB.semis,
+  r => r.patente,
+  r => `${r.tipo} · ${r.marca}`,
+  null
+);
+selectCallbacks['inputSemi'] = (sm) => {
+  state.semi = sm;
+  document.getElementById('inputSemi').value = sm.patente;
+  document.getElementById('clearSemi').style.display = 'flex';
+  document.getElementById('smTipo').textContent = sm.tipo || '—';
+  document.getElementById('smAnio').textContent = sm.anio || '—';
+  document.getElementById('smMarcaMod').textContent = [sm.marca, sm.modelo].filter(Boolean).join(' · ') || '—';
+  document.getElementById('smChasis').textContent = sm.chasis || '—';
+  document.getElementById('smSeguro').textContent = sm.seguro || '—';
+  document.getElementById('smPoliza').textContent = sm.poliza || '—';
+
+  const vtoP = sm.vtoPoliza;
+  const vtoPEl = document.getElementById('smVtoPoliza');
+  vtoPEl.textContent = vtoP || '—';
+  vtoPEl.className = 'dato-valor ' + dateClass(vtoP);
+
+  const sNro = sm.senasaNro;
+  const sNroEl = document.getElementById('smSenasaNro');
+  sNroEl.textContent = sNro;
+  sNroEl.className = 'dato-valor' + (sNro === 'No corresponde' ? ' nc' : '');
+
+  const vtoSen = sm.vtoSenasa;
+  const vtoSenEl = document.getElementById('smVtoSenasa');
+  vtoSenEl.textContent = vtoSen;
+  vtoSenEl.className = 'dato-valor' + (vtoSen === 'No corresponde' ? ' nc' : (' ' + dateClass(vtoSen)));
+
+  document.getElementById('fichaSemi').classList.add('visible');
+  document.getElementById('badgeSemi').textContent = sm.patente;
+};
+
+// ── TOGGLE SEMI ───────────────────────────────────────────────────────────────
+function toggleSemiSection() {
+  state.semiEnabled = !state.semiEnabled;
+  document.getElementById('toggleSemi').classList.toggle('active', state.semiEnabled);
+  document.getElementById('cardSemi').style.display = state.semiEnabled ? 'block' : 'none';
+  if (!state.semiEnabled) {
+    clearField('Semi');
+  }
+}
+
+// ── CLEAR ─────────────────────────────────────────────────────────────────────
+function clearField(which) {
+  if (which === 'Chofer') {
+    state.chofer = null;
+    document.getElementById('inputChofer').value = '';
+    document.getElementById('clearChofer').style.display = 'none';
+    document.getElementById('fichaChofer').classList.remove('visible');
+    document.getElementById('badgeChofer').textContent = 'Sin seleccionar';
+  } else if (which === 'Tractor') {
+    state.tractor = null;
+    document.getElementById('inputTractor').value = '';
+    document.getElementById('clearTractor').style.display = 'none';
+    document.getElementById('fichaTractor').classList.remove('visible');
+    document.getElementById('badgeTractor').textContent = 'Sin seleccionar';
+  } else if (which === 'Semi') {
+    state.semi = null;
+    document.getElementById('inputSemi').value = '';
+    document.getElementById('clearSemi').style.display = 'none';
+    document.getElementById('fichaSemi').classList.remove('visible');
+    document.getElementById('badgeSemi').textContent = 'Sin seleccionar';
+  }
+}
+
+// ── TEXTO PARA COMPARTIR ──────────────────────────────────────────────────────
+function buildText() {
+  const d = new Date();
+  const fecha = `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
+  const ch = state.chofer;
+  const tr = state.tractor;
+  const sm = state.semi;
+  const obs = document.getElementById('obsInput').value.trim();
+
+  let txt = `🚛 *HOJA DE RUTA — TRANSPORTE VILA*\n`;
+  txt += `📅 ${fecha}\n`;
+  txt += `━━━━━━━━━━━━━━━━━━━━\n`;
+
+  if (ch) {
+    txt += `\n👤 *CHOFER*\n`;
+    txt += `Nombre: ${ch.nombre}\n`;
+    txt += `DNI: ${ch.dni}\n`;
+    if (ch.tel) txt += `Tel: ${ch.tel}\n`;
+  }
+
+  if (tr) {
+    txt += `\n🚛 *TRACTOR — ${tr.patente}*\n`;
+    txt += `Tipo: ${tr.tipo}  |  ${tr.marca} ${tr.modelo}  (${tr.anio})\n`;
+    if (tr.chasis) txt += `Chasis: ${tr.chasis}\n`;
+    if (tr.seguro) txt += `Seguro: ${tr.seguro} — Póliza ${tr.poliza}\n`;
+    if (tr.vtoPoliza) txt += `Vto. Póliza: ${tr.vtoPoliza}\n`;
+    txt += `SENASA: ${tr.senasaNro}`;
+    if (tr.senasaNro !== 'No corresponde') txt += `  Vto: ${tr.vtoSenasa}`;
+    txt += '\n';
+  }
+
+  if (sm && state.semiEnabled) {
+    txt += `\n🚚 *SEMIRREMOLQUE — ${sm.patente}*\n`;
+    txt += `Tipo: ${sm.tipo}  |  ${sm.marca} ${sm.modelo}  (${sm.anio})\n`;
+    if (sm.chasis) txt += `Chasis: ${sm.chasis}\n`;
+    if (sm.seguro) txt += `Seguro: ${sm.seguro} — Póliza ${sm.poliza}\n`;
+    if (sm.vtoPoliza) txt += `Vto. Póliza: ${sm.vtoPoliza}\n`;
+    txt += `SENASA: ${sm.senasaNro}`;
+    if (sm.senasaNro !== 'No corresponde') txt += `  Vto: ${sm.vtoSenasa}`;
+    txt += '\n';
+  }
+
+  if (obs) {
+    txt += `\n📝 *OBSERVACIONES*\n${obs}\n`;
+  }
+
+  txt += `\n━━━━━━━━━━━━━━━━━━━━\n_Tran Ser S.A. / Transporte Vila_`;
+  return txt;
+}
+
+function compartirWhatsApp() {
+  const txt = buildText();
+  const url = `https://wa.me/?text=${encodeURIComponent(txt)}`;
+  window.open(url, '_blank');
+}
+
+function copiarTexto() {
+  const txt = buildText();
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(txt).then(() => showToast('✓ Copiado al portapapeles'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = txt;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('✓ Copiado al portapapeles');
+  }
+}
+
+function resetAll() {
+  clearField('Chofer');
+  clearField('Tractor');
+  clearField('Semi');
+  if (state.semiEnabled) toggleSemiSection();
+  document.getElementById('obsInput').value = '';
+  showToast('🗑 Formulario limpiado');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+</script>
+</body>
+</html>
