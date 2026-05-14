@@ -103,7 +103,8 @@
     border-radius: var(--radio);
     box-shadow: var(--sombra);
     margin-bottom: 14px;
-    overflow: hidden;
+    overflow: visible;
+    position: relative;
   }
   .card-header {
     display: flex;
@@ -111,6 +112,7 @@
     gap: 9px;
     padding: 11px 14px 10px;
     border-bottom: 1px solid var(--gris-line);
+    border-radius: var(--radio) var(--radio) 0 0;
   }
   .card-header.azul    { background: var(--azul); }
   .card-header.rojo    { background: var(--rojo-osc); }
@@ -137,13 +139,15 @@
     border-radius: 20px;
     letter-spacing: 0.3px;
   }
-  .card-body { padding: 14px; }
+  .card-body { padding: 14px; overflow: visible; position: relative; }
 
   /* ── SEARCH INPUT ───────────────────────────────────────── */
   .search-wrap {
     position: relative;
     margin-bottom: 10px;
+    z-index: 10;
   }
+  .search-wrap.active { z-index: 300; }
   .search-icon {
     position: absolute;
     left: 11px;
@@ -196,10 +200,10 @@
     background: white;
     border: 1.5px solid var(--gris-line);
     border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.13);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
     max-height: 220px;
     overflow-y: auto;
-    z-index: 200;
+    z-index: 9999;
     display: none;
   }
   .dropdown.open { display: block; }
@@ -454,13 +458,262 @@
     line-height: 1;
   }
 
-  /* scrollbar */
-  .dropdown::-webkit-scrollbar { width: 4px; }
-  .dropdown::-webkit-scrollbar-track { background: #f0f0f0; }
-  .dropdown::-webkit-scrollbar-thumb { background: var(--gris-line); border-radius: 2px; }
+  /* ── PANTALLA LOGIN ─────────────────────────────────────── */
+  #loginScreen {
+    position: fixed;
+    inset: 0;
+    background: var(--gris-osc);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 24px;
+  }
+  .login-logo {
+    background: var(--rojo);
+    color: white;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    padding: 10px 28px 12px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+  }
+  .login-sub {
+    color: #8899aa;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+  .login-box {
+    background: #243040;
+    border-radius: 14px;
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 340px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .login-box h2 {
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 0.5px;
+  }
+  .login-box p {
+    color: #8899aa;
+    font-size: 12px;
+    margin-bottom: 22px;
+  }
+  .login-input {
+    width: 100%;
+    padding: 13px 14px;
+    border: 2px solid #344558;
+    border-radius: 8px;
+    background: #1C2833;
+    color: white;
+    font-family: 'Barlow', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    letter-spacing: 2px;
+    -webkit-appearance: none;
+    transition: border-color 0.2s;
+  }
+  .login-input:focus { outline: none; border-color: var(--rojo); }
+  .login-input.error { border-color: var(--rojo); animation: shake 0.35s; }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-8px)}
+    40%{transform:translateX(8px)}
+    60%{transform:translateX(-5px)}
+    80%{transform:translateX(5px)}
+  }
+  .login-btn {
+    width: 100%;
+    padding: 13px;
+    background: var(--rojo);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    -webkit-appearance: none;
+  }
+  .login-btn:active { background: var(--rojo-osc); }
+  .login-error {
+    color: #ff6b6b;
+    font-size: 12px;
+    text-align: center;
+    margin-top: 10px;
+    font-weight: 600;
+    min-height: 18px;
+  }
+  .login-footer {
+    color: #566573;
+    font-size: 11px;
+    margin-top: 32px;
+    text-align: center;
+  }
+
+  /* ── BOTÓN CAPTURA ──────────────────────────────────────── */
+  .btn-screenshot {
+    background: #8e44ad;
+    color: white;
+    flex: 0 0 auto;
+    padding: 13px 14px;
+  }
+
+  /* ── MODAL IMAGEN ───────────────────────────────────────── */
+  #imgModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 8000;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #imgModal.open { display: flex; }
+  #imgModal img {
+    max-width: 100%;
+    max-height: 70vh;
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .modal-btns {
+    display: flex;
+    gap: 12px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .modal-btn {
+    padding: 12px 22px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    -webkit-appearance: none;
+  }
+  .modal-btn-dl  { background: #25D366; color: white; }
+  .modal-btn-cls { background: #566573; color: white; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+// ── CONTRASEÑA ────────────────────────────────────────────────────────────────
+const PASS = 'Vila2025';
+
+function doLogin() {
+  const val = document.getElementById('loginInput').value;
+  const inp = document.getElementById('loginInput');
+  const err = document.getElementById('loginError');
+  if (val === PASS) {
+    document.getElementById('loginScreen').style.display = 'none';
+    sessionStorage.setItem('vilaAuth', '1');
+  } else {
+    inp.classList.add('error');
+    err.textContent = 'Contraseña incorrecta. Intentá de nuevo.';
+    inp.value = '';
+    setTimeout(() => inp.classList.remove('error'), 400);
+  }
+}
+
+// Auto-login si ya autenticó en esta sesión
+window.addEventListener('DOMContentLoaded', () => {
+  if (sessionStorage.getItem('vilaAuth') === '1') {
+    document.getElementById('loginScreen').style.display = 'none';
+  }
+  setTimeout(() => {
+    document.getElementById('loginInput') && document.getElementById('loginInput').focus();
+  }, 300);
+});
+
+// ── CAPTURA DE PANTALLA ───────────────────────────────────────────────────────
+let capturedImg = null;
+
+function tomarCaptura() {
+  // Cerrar dropdowns abiertos
+  document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('open'));
+  
+  showToast('📸 Generando imagen…');
+  
+  const target = document.querySelector('.content');
+  
+  html2canvas(target, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#f5f7fa',
+    logging: false,
+    windowWidth: target.scrollWidth,
+    width: target.offsetWidth,
+  }).then(canvas => {
+    capturedImg = canvas.toDataURL('image/png');
+    const modal = document.getElementById('imgModal');
+    document.getElementById('modalImg').src = capturedImg;
+    modal.classList.add('open');
+  }).catch(() => {
+    showToast('Error al generar la imagen');
+  });
+}
+
+function downloadImg() {
+  if (!capturedImg) return;
+  const a = document.createElement('a');
+  const d = new Date();
+  const fecha = d.getDate().toString().padStart(2,'0') + '-' +
+    (d.getMonth()+1).toString().padStart(2,'0') + '-' + d.getFullYear();
+  a.download = 'hoja_de_ruta_vila_' + fecha + '.png';
+  a.href = capturedImg;
+  a.click();
+  showToast('✓ Imagen guardada');
+}
+
+function closeModal() {
+  document.getElementById('imgModal').classList.remove('open');
+}
+
+</script>
 </head>
 <body>
+
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-logo">Vila</div>
+  <div class="login-sub">Transporte Vila · Tran Ser S.A.</div>
+  <div class="login-box">
+    <h2>🔒 Acceso Restringido</h2>
+    <p>Ingresá la contraseña para continuar</p>
+    <input type="password" class="login-input" id="loginInput"
+      placeholder="Contraseña" autocomplete="off"
+      onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="login-btn" onclick="doLogin()">Ingresar →</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+  <div class="login-footer">Uso interno · Transporte Vila</div>
+</div>
+
+<!-- IMAGE MODAL -->
+<div id="imgModal">
+  <img id="modalImg" src="" alt="Captura">
+  <div class="modal-btns">
+    <button class="modal-btn modal-btn-dl" onclick="downloadImg()">⬇️ Descargar imagen</button>
+    <button class="modal-btn modal-btn-cls" onclick="closeModal()">✕ Cerrar</button>
+  </div>
+</div>
 
 <header class="app-header">
   <div class="header-top">
@@ -640,6 +893,7 @@
     <button class="btn btn-copy" onclick="copiarTexto()">
       <span style="font-size:16px">📋</span> Copiar
     </button>
+    <button class="btn btn-screenshot" onclick="tomarCaptura()" title="Captura de pantalla">📸</button>
     <button class="btn btn-reset" onclick="resetAll()" title="Limpiar todo">🗑️</button>
   </div>
 
@@ -710,10 +964,14 @@ function setupSearch(inputId, dropId, data, keyFn, subFn, onSelect) {
     clearBtn.style.display = input.value ? 'flex' : 'none';
     render(input.value);
   });
-  input.addEventListener('focus', () => { render(input.value); });
+  input.addEventListener('focus', () => {
+    input.closest('.search-wrap').classList.add('active');
+    render(input.value);
+  });
   document.addEventListener('click', (e) => {
     if (!input.closest('.search-wrap').contains(e.target)) {
       drop.classList.remove('open');
+      input.closest('.search-wrap').classList.remove('active');
     }
   });
 }
@@ -934,6 +1192,80 @@ function showToast(msg) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2200);
 }
+
+// ── CONTRASEÑA ────────────────────────────────────────────────────────────────
+const PASS = 'Vila2025';
+
+function doLogin() {
+  const val = document.getElementById('loginInput').value;
+  const inp = document.getElementById('loginInput');
+  const err = document.getElementById('loginError');
+  if (val === PASS) {
+    document.getElementById('loginScreen').style.display = 'none';
+    sessionStorage.setItem('vilaAuth', '1');
+  } else {
+    inp.classList.add('error');
+    err.textContent = 'Contraseña incorrecta. Intentá de nuevo.';
+    inp.value = '';
+    setTimeout(() => inp.classList.remove('error'), 400);
+  }
+}
+
+// Auto-login si ya autenticó en esta sesión
+window.addEventListener('DOMContentLoaded', () => {
+  if (sessionStorage.getItem('vilaAuth') === '1') {
+    document.getElementById('loginScreen').style.display = 'none';
+  }
+  setTimeout(() => {
+    document.getElementById('loginInput') && document.getElementById('loginInput').focus();
+  }, 300);
+});
+
+// ── CAPTURA DE PANTALLA ───────────────────────────────────────────────────────
+let capturedImg = null;
+
+function tomarCaptura() {
+  // Cerrar dropdowns abiertos
+  document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('open'));
+  
+  showToast('📸 Generando imagen…');
+  
+  const target = document.querySelector('.content');
+  
+  html2canvas(target, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#f5f7fa',
+    logging: false,
+    windowWidth: target.scrollWidth,
+    width: target.offsetWidth,
+  }).then(canvas => {
+    capturedImg = canvas.toDataURL('image/png');
+    const modal = document.getElementById('imgModal');
+    document.getElementById('modalImg').src = capturedImg;
+    modal.classList.add('open');
+  }).catch(() => {
+    showToast('Error al generar la imagen');
+  });
+}
+
+function downloadImg() {
+  if (!capturedImg) return;
+  const a = document.createElement('a');
+  const d = new Date();
+  const fecha = d.getDate().toString().padStart(2,'0') + '-' +
+    (d.getMonth()+1).toString().padStart(2,'0') + '-' + d.getFullYear();
+  a.download = 'hoja_de_ruta_vila_' + fecha + '.png';
+  a.href = capturedImg;
+  a.click();
+  showToast('✓ Imagen guardada');
+}
+
+function closeModal() {
+  document.getElementById('imgModal').classList.remove('open');
+}
+
 </script>
 </body>
 </html>
+
