@@ -1541,24 +1541,40 @@ function onSerChange(i) {
   }
   trSel.classList.toggle('filled', !!trSel.value);
 
-  // Semi → SENASA
+  // Semi → SENASA (si hay semi, usa senasa del semi; si no, usa senasa del tractor)
   const smSel = document.getElementById('serSm' + i);
   const smVal = smSel.value;
   const smData = DB.semis.find(s => s.patente === smVal);
   const senEl  = document.getElementById('serSen' + i);
   const vtoEl  = document.getElementById('serVtoSen' + i);
+
   if (smData) {
-    senEl.textContent  = smData.senasaNro || '—';
-    vtoEl.textContent  = smData.vtoSenasa || '—';
-    senEl.classList.add('filled');
-    vtoEl.classList.add('filled');
+    // Semi seleccionado → mostrar senasa del semi
+    const sNro = smData.senasaNro || '';
+    const sVto = smData.vtoSenasa || '';
+    senEl.textContent = (sNro && sNro !== 'No corresponde') ? sNro : 'N/C';
+    vtoEl.textContent = (sVto && sVto !== 'No corresponde') ? sVto : 'N/C';
+    senEl.classList.toggle('filled', !!sNro && sNro !== 'No corresponde');
+    vtoEl.classList.toggle('filled', !!sVto && sVto !== 'No corresponde');
     smSel.classList.add('filled');
   } else {
-    senEl.textContent  = '—';
-    vtoEl.textContent  = '—';
-    senEl.classList.remove('filled');
-    vtoEl.classList.remove('filled');
+    // Sin semi → mostrar senasa del tractor (si tiene)
     smSel.classList.remove('filled');
+    const trValNow = document.getElementById('serTr' + i).value;
+    const trDataNow = DB.tractores.find(t => t.patente === trValNow);
+    if (trDataNow) {
+      const tNro = trDataNow.senasaNro || '';
+      const tVto = trDataNow.vtoSenasa || '';
+      senEl.textContent = (tNro && tNro !== 'No corresponde') ? tNro : 'N/C';
+      vtoEl.textContent = (tVto && tVto !== 'No corresponde') ? tVto : 'N/C';
+      senEl.classList.toggle('filled', !!tNro && tNro !== 'No corresponde');
+      vtoEl.classList.toggle('filled', !!tVto && tVto !== 'No corresponde');
+    } else {
+      senEl.textContent = '—';
+      vtoEl.textContent = '—';
+      senEl.classList.remove('filled');
+      vtoEl.classList.remove('filled');
+    }
   }
 
   // Destino
