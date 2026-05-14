@@ -611,6 +611,125 @@
   }
   .modal-btn-dl  { background: #25D366; color: white; }
   .modal-btn-cls { background: #566573; color: white; }
+
+  /* ── TABS NAV ────────────────────────────────────────────── */
+  .tabs-nav {
+    display: flex;
+    background: var(--gris-osc);
+    padding: 0 14px;
+    position: sticky;
+    top: 72px;
+    z-index: 90;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 11px 8px 10px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #8899aa;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    -webkit-appearance: none;
+  }
+  .tab-btn.active { color: white; border-bottom-color: var(--rojo); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── SERENISIMA ──────────────────────────────────────────── */
+  .ser-card {
+    background: var(--blanco);
+    border-radius: var(--radio);
+    box-shadow: var(--sombra);
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .ser-header {
+    background: #8B1A1A;
+    padding: 11px 14px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border-radius: var(--radio) var(--radio) 0 0;
+  }
+  .ser-header h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .ser-header .ser-date { margin-left: auto; color: rgba(255,255,255,0.7); font-size: 11px; font-weight: 600; }
+  .ser-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .ser-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 580px; }
+  .ser-table th {
+    background: #2C3E50;
+    color: white;
+    padding: 8px 8px;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .ser-table td {
+    padding: 5px 5px;
+    border-bottom: 1px solid var(--gris-line);
+    vertical-align: middle;
+    text-align: center;
+  }
+  .ser-table tr:last-child td { border-bottom: none; }
+  .ser-table tr:nth-child(even) td { background: var(--gris-bg); }
+  .ser-row-num { font-weight: 800; color: var(--gris-med); font-size: 11px; }
+  .ser-select {
+    width: 100%;
+    min-width: 88px;
+    padding: 5px 3px;
+    border: 1.5px solid var(--gris-line);
+    border-radius: 6px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--negro);
+    background: white;
+    -webkit-appearance: none;
+    text-align: center;
+    cursor: pointer;
+  }
+  .ser-select:focus { outline: none; border-color: #8B1A1A; }
+  .ser-select.filled { background: var(--azul-light); border-color: var(--azul); }
+  .ser-dest-select {
+    width: 100%;
+    min-width: 105px;
+    padding: 5px 3px;
+    border: 1.5px solid var(--gris-line);
+    border-radius: 6px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--negro);
+    background: white;
+    -webkit-appearance: none;
+    text-align: center;
+    cursor: pointer;
+  }
+  .ser-dest-select:focus { outline: none; border-color: #8B1A1A; }
+  .ser-dest-select.filled { background: #fdf0f0; border-color: #8B1A1A; color: #8B1A1A; }
+  .ser-auto { font-size: 10px; color: var(--gris-med); font-weight: 500; white-space: nowrap; }
+  .ser-auto.filled { color: var(--negro); font-weight: 700; font-size: 11px; }
+  .btn-mail { background: #2980B9; color: white; }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
 // ── CONTRASEÑA ────────────────────────────────────────────────────────────────
@@ -631,15 +750,7 @@ function doLogin() {
   }
 }
 
-// Auto-login si ya autenticó en esta sesión
-window.addEventListener('DOMContentLoaded', () => {
-  if (sessionStorage.getItem('vilaAuth') === '1') {
-    document.getElementById('loginScreen').style.display = 'none';
-  }
-  setTimeout(() => {
-    document.getElementById('loginInput') && document.getElementById('loginInput').focus();
-  }, 300);
-});
+// DOMContentLoaded handled below
 
 // ── CAPTURA DE PANTALLA ───────────────────────────────────────────────────────
 let capturedImg = null;
@@ -727,6 +838,18 @@ function closeModal() {
   <div class="header-bar"></div>
 </header>
 
+<!-- TABS NAV -->
+<nav class="tabs-nav">
+  <button class="tab-btn active" onclick="switchTab('hdr')" id="tabHdr">
+    🚛 Hoja de Ruta
+  </button>
+  <button class="tab-btn" onclick="switchTab('ser')" id="tabSer">
+    🥛 La Serenísima
+  </button>
+</nav>
+
+<!-- TAB: HOJA DE RUTA -->
+<div class="tab-panel active" id="panelHdr">
 <div class="content">
 
   <!-- CHOFER -->
@@ -890,14 +1013,72 @@ function closeModal() {
     <button class="btn btn-wsp" onclick="compartirWhatsApp()">
       <span style="font-size:18px">💬</span> WhatsApp
     </button>
-    <button class="btn btn-copy" onclick="copiarTexto()">
-      <span style="font-size:16px">📋</span> Copiar
+    <button class="btn btn-mail" onclick="compartirMail()">
+      <span style="font-size:16px">✉️</span> Mail
     </button>
-    <button class="btn btn-screenshot" onclick="tomarCaptura()" title="Captura de pantalla">📸</button>
-    <button class="btn btn-reset" onclick="resetAll()" title="Limpiar todo">🗑️</button>
+    <button class="btn btn-screenshot" onclick="tomarCaptura()" title="Captura">📸</button>
+    <button class="btn btn-reset" onclick="resetAll()" title="Limpiar">🗑️</button>
   </div>
 
 </div><!-- /content -->
+</div><!-- /panelHdr -->
+
+<!-- TAB: LA SERENÍSIMA -->
+<div class="tab-panel" id="panelSer">
+<div class="content">
+
+  <!-- DESPACHO CARD -->
+  <div class="ser-card">
+    <div class="ser-header">
+      <span style="font-size:18px">🥛</span>
+      <h2>La Serenísima — Despacho Diario</h2>
+      <span class="ser-date" id="serDate"></span>
+    </div>
+    <div class="ser-table-wrap">
+      <table class="ser-table" id="serTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>CHOFER</th>
+            <th>DNI</th>
+            <th>TRACTOR</th>
+            <th>SEMI / CHASIS</th>
+            <th>SENASA</th>
+            <th>VTO SENASA</th>
+            <th>DESTINO</th>
+          </tr>
+        </thead>
+        <tbody id="serBody">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- OBSERVACIONES SER -->
+  <div class="card">
+    <div class="card-header gris">
+      <span class="icon">📝</span>
+      <h2>Observaciones</h2>
+    </div>
+    <div class="card-body">
+      <textarea class="obs-input" id="obsInputSer" placeholder="Horario de salida, instrucciones al cliente…" rows="3"></textarea>
+    </div>
+  </div>
+
+  <!-- BOTONES SER -->
+  <div class="btn-group">
+    <button class="btn btn-wsp" onclick="serWhatsApp()">
+      <span style="font-size:18px">💬</span> WhatsApp
+    </button>
+    <button class="btn btn-mail" onclick="serMail()">
+      <span style="font-size:16px">✉️</span> Mail
+    </button>
+    <button class="btn btn-screenshot" onclick="tomarCapturaEl('panelSer')" title="Captura">📸</button>
+    <button class="btn btn-reset" onclick="resetSer()" title="Limpiar">🗑️</button>
+  </div>
+
+</div><!-- /content ser -->
+</div><!-- /panelSer -->
 
 <div class="toast" id="toast"></div>
 
@@ -1211,15 +1392,7 @@ function doLogin() {
   }
 }
 
-// Auto-login si ya autenticó en esta sesión
-window.addEventListener('DOMContentLoaded', () => {
-  if (sessionStorage.getItem('vilaAuth') === '1') {
-    document.getElementById('loginScreen').style.display = 'none';
-  }
-  setTimeout(() => {
-    document.getElementById('loginInput') && document.getElementById('loginInput').focus();
-  }, 300);
-});
+// DOMContentLoaded handled below
 
 // ── CAPTURA DE PANTALLA ───────────────────────────────────────────────────────
 let capturedImg = null;
@@ -1265,7 +1438,284 @@ function closeModal() {
   document.getElementById('imgModal').classList.remove('open');
 }
 
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+  document.getElementById('panel' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ── SERENÍSIMA ────────────────────────────────────────────────────────────────
+const DESTINOS = ['CHARATA', 'FORMOSA 923', 'FORMOSA 327', 'RECONQUISTA', 'AUXILIO'];
+
+function initSerTable() {
+  // Set date
+  const d = new Date();
+  const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  document.getElementById('serDate').textContent =
+    dias[d.getDay()] + ' ' + d.getDate() + ' ' + meses[d.getMonth()] + ' ' + d.getFullYear();
+
+  const tbody = document.getElementById('serBody');
+  tbody.innerHTML = '';
+
+  for (let i = 0; i < 5; i++) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = buildSerRow(i);
+    tbody.appendChild(tr);
+  }
+}
+
+function buildSerRow(i) {
+  const choferOpts = DB.choferes.map(c =>
+    `<option value="${c.nombre}">${c.nombre}</option>`
+  ).join('');
+
+  const tractorOpts = DB.tractores.map(t =>
+    `<option value="${t.patente}">${t.patente} — ${t.marca}</option>`
+  ).join('');
+
+  const semiOpts = DB.semis.map(s =>
+    `<option value="${s.patente}">${s.patente} — ${s.tipo}</option>`
+  ).join('');
+
+  const destOpts = DESTINOS.map(d =>
+    `<option value="${d}">${d}</option>`
+  ).join('');
+
+  return `
+    <td class="ser-row-num">${i+1}</td>
+    <td>
+      <select class="ser-select" id="serCh${i}" onchange="onSerChange(${i})">
+        <option value="">— Chofer —</option>
+        ${choferOpts}
+      </select>
+    </td>
+    <td><span class="ser-auto" id="serDni${i}">—</span></td>
+    <td>
+      <select class="ser-select" id="serTr${i}" onchange="onSerChange(${i})">
+        <option value="">— Tractor —</option>
+        ${tractorOpts}
+      </select>
+    </td>
+    <td>
+      <select class="ser-select" id="serSm${i}" onchange="onSerChange(${i})">
+        <option value="">— Semi —</option>
+        ${semiOpts}
+      </select>
+    </td>
+    <td><span class="ser-auto" id="serSen${i}">—</span></td>
+    <td><span class="ser-auto" id="serVtoSen${i}">—</span></td>
+    <td>
+      <select class="ser-dest-select" id="serDest${i}" onchange="onSerChange(${i})">
+        <option value="">— Destino —</option>
+        ${destOpts}
+      </select>
+    </td>
+  `;
+}
+
+function onSerChange(i) {
+  // Chofer → DNI
+  const chSel = document.getElementById('serCh' + i);
+  const chVal = chSel.value;
+  const chData = DB.choferes.find(c => c.nombre === chVal);
+  const dniEl = document.getElementById('serDni' + i);
+  if (chData) {
+    dniEl.textContent = chData.dni || '—';
+    dniEl.classList.add('filled');
+    chSel.classList.add('filled');
+  } else {
+    dniEl.textContent = '—';
+    dniEl.classList.remove('filled');
+    chSel.classList.remove('filled');
+  }
+
+  // Tractor → filled style
+  const trSel = document.getElementById('serTr' + i);
+  trSel.classList.toggle('filled', !!trSel.value);
+
+  // Semi → SENASA
+  const smSel = document.getElementById('serSm' + i);
+  const smVal = smSel.value;
+  const smData = DB.semis.find(s => s.patente === smVal);
+  const senEl  = document.getElementById('serSen' + i);
+  const vtoEl  = document.getElementById('serVtoSen' + i);
+  if (smData) {
+    senEl.textContent  = smData.senasaNro || '—';
+    vtoEl.textContent  = smData.vtoSenasa || '—';
+    senEl.classList.add('filled');
+    vtoEl.classList.add('filled');
+    smSel.classList.add('filled');
+  } else {
+    senEl.textContent  = '—';
+    vtoEl.textContent  = '—';
+    senEl.classList.remove('filled');
+    vtoEl.classList.remove('filled');
+    smSel.classList.remove('filled');
+  }
+
+  // Destino
+  const destSel = document.getElementById('serDest' + i);
+  destSel.classList.toggle('filled', !!destSel.value);
+}
+
+function getSerRows() {
+  const rows = [];
+  for (let i = 0; i < 5; i++) {
+    rows.push({
+      chofer:  document.getElementById('serCh' + i).value,
+      dni:     document.getElementById('serDni' + i).textContent,
+      tractor: document.getElementById('serTr' + i).value,
+      semi:    document.getElementById('serSm' + i).value,
+      senasa:  document.getElementById('serSen' + i).textContent,
+      vtoSen:  document.getElementById('serVtoSen' + i).textContent,
+      destino: document.getElementById('serDest' + i).value,
+    });
+  }
+  return rows;
+}
+
+function buildSerText() {
+  const d = new Date();
+  const fecha = d.getDate().toString().padStart(2,'0') + '/' +
+    (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
+  const rows = getSerRows();
+  const obs = document.getElementById('obsInputSer').value.trim();
+
+  let txt = '🥛 *DESPACHO LA SERENÍSIMA — TRANSPORTE VILA*\n';
+  txt += '📅 ' + fecha + '\n';
+  txt += '━━━━━━━━━━━━━━━━━━━━\n';
+
+  rows.forEach((r, i) => {
+    if (!r.chofer && !r.tractor) return;
+    txt += '\n*Camión ' + (i+1) + (r.destino ? ' — ' + r.destino : '') + '*\n';
+    if (r.chofer)  txt += '👤 ' + r.chofer + (r.dni && r.dni !== '—' ? '  DNI: ' + r.dni : '') + '\n';
+    if (r.tractor) txt += '🚛 Tractor: ' + r.tractor + '\n';
+    if (r.semi)    txt += '🚚 Semi: ' + r.semi + '\n';
+    if (r.senasa && r.senasa !== '—' && r.senasa !== 'No corresponde')
+      txt += '📋 SENASA: ' + r.senasa + '  Vto: ' + r.vtoSen + '\n';
+  });
+
+  if (obs) txt += '\n📝 ' + obs + '\n';
+  txt += '\n━━━━━━━━━━━━━━━━━━━━\n_Tran Ser S.A. / Transporte Vila_';
+  return txt;
+}
+
+function serWhatsApp() {
+  const txt = buildSerText();
+  window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
+}
+
+function serMail() {
+  const d = new Date();
+  const fecha = d.getDate().toString().padStart(2,'0') + '/' +
+    (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
+  const rows = getSerRows();
+  const obs = document.getElementById('obsInputSer').value.trim();
+
+  const subject = 'Despacho La Serenísima — ' + fecha + ' — Transporte Vila';
+  let body = 'DESPACHO LA SERENÍSIMA\n';
+  body += fecha + '\n\n';
+
+  rows.forEach((r, i) => {
+    if (!r.chofer && !r.tractor) return;
+    body += 'CAMIÓN ' + (i+1) + (r.destino ? ' — ' + r.destino : '') + '\n';
+    if (r.chofer)  body += 'Chofer: ' + r.chofer + (r.dni && r.dni !== '—' ? '  |  DNI: ' + r.dni : '') + '\n';
+    if (r.tractor) body += 'Tractor: ' + r.tractor + '\n';
+    if (r.semi)    body += 'Semi/Chasis: ' + r.semi + '\n';
+    if (r.senasa && r.senasa !== '—' && r.senasa !== 'No corresponde')
+      body += 'SENASA: ' + r.senasa + '  |  Vto: ' + r.vtoSen + '\n';
+    body += '\n';
+  });
+
+  if (obs) body += 'Observaciones: ' + obs + '\n\n';
+  body += 'Transporte Vila / Tran Ser S.A.';
+
+  window.location.href = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+}
+
+function resetSer() {
+  initSerTable();
+  document.getElementById('obsInputSer').value = '';
+  showToast('🗑 Despacho limpiado');
+}
+
+// ── MAIL HOJA DE RUTA ────────────────────────────────────────────────────────
+function compartirMail() {
+  const d = new Date();
+  const fecha = d.getDate().toString().padStart(2,'0') + '/' +
+    (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
+  const ch = state.chofer;
+  const tr = state.tractor;
+  const sm = state.semi;
+  const obs = document.getElementById('obsInput').value.trim();
+
+  const subject = 'Hoja de Ruta — ' + fecha + ' — Transporte Vila';
+  let body = 'HOJA DE RUTA\n' + fecha + '\n\n';
+
+  if (ch) {
+    body += 'CHOFER\n';
+    body += 'Nombre: ' + ch.nombre + '\n';
+    body += 'DNI: ' + ch.dni + '\n';
+    if (ch.tel) body += 'Tel: ' + ch.tel + '\n';
+    body += '\n';
+  }
+  if (tr) {
+    body += 'TRACTOR — ' + tr.patente + '\n';
+    body += tr.tipo + '  |  ' + tr.marca + ' ' + tr.modelo + '  (' + tr.anio + ')\n';
+    if (tr.chasis) body += 'Chasis: ' + tr.chasis + '\n';
+    if (tr.seguro) body += 'Seguro: ' + tr.seguro + ' — Póliza ' + tr.poliza + '\n';
+    if (tr.vtoPoliza) body += 'Vto. Póliza: ' + tr.vtoPoliza + '\n';
+    body += 'SENASA: ' + tr.senasaNro;
+    if (tr.senasaNro !== 'No corresponde') body += '  Vto: ' + tr.vtoSenasa;
+    body += '\n\n';
+  }
+  if (sm && state.semiEnabled) {
+    body += 'SEMIRREMOLQUE — ' + sm.patente + '\n';
+    body += sm.tipo + '  |  ' + sm.marca + ' ' + sm.modelo + '  (' + sm.anio + ')\n';
+    if (sm.chasis) body += 'Chasis: ' + sm.chasis + '\n';
+    if (sm.seguro) body += 'Seguro: ' + sm.seguro + ' — Póliza ' + sm.poliza + '\n';
+    if (sm.vtoPoliza) body += 'Vto. Póliza: ' + sm.vtoPoliza + '\n';
+    body += 'SENASA: ' + sm.senasaNro;
+    if (sm.senasaNro !== 'No corresponde') body += '  Vto: ' + sm.vtoSenasa;
+    body += '\n\n';
+  }
+  if (obs) body += 'Observaciones: ' + obs + '\n\n';
+  body += 'Transporte Vila / Tran Ser S.A.';
+
+  window.location.href = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+}
+
+// Actualizar función captura para recibir elemento opcional
+function tomarCapturaEl(panelId) {
+  document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('open'));
+  showToast('📸 Generando imagen…');
+  const target = document.querySelector('#' + panelId + ' .content');
+  html2canvas(target, {
+    scale: 2, useCORS: true, backgroundColor: '#f5f7fa', logging: false,
+    windowWidth: target.scrollWidth, width: target.offsetWidth,
+  }).then(canvas => {
+    capturedImg = canvas.toDataURL('image/png');
+    document.getElementById('modalImg').src = capturedImg;
+    document.getElementById('imgModal').classList.add('open');
+  }).catch(() => showToast('Error al generar la imagen'));
+}
+
+// Init serenísima on load
+window.addEventListener('DOMContentLoaded', () => {
+  if (sessionStorage.getItem('vilaAuth') === '1') {
+    document.getElementById('loginScreen').style.display = 'none';
+  }
+  initSerTable();
+  setTimeout(() => {
+    document.getElementById('loginInput') && document.getElementById('loginInput').focus();
+  }, 300);
+});
+
 </script>
 </body>
 </html>
-
