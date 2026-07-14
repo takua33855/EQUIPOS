@@ -1189,10 +1189,12 @@
 
         <!-- ESTRUCTURA ESPERADA -->
         <div style="margin-top:12px;">
-          <div class="section-label" style="margin-bottom:8px;">Estructura esperada</div>
-          <div style="font-size:12px;color:var(--gris-med);line-height:1.7;">
-            📋 <strong>Hoja "UNIDADES"</strong> — columnas: PATENTE, TIPO, MARCA, MODELO, AÑO, CHASIS, SEGURO, POLIZA, VTO_POLIZA, SENASA_NRO, VTO_SENASA<br>
-            👤 <strong>Hoja "CHOFERES"</strong> — columnas: NOMBRE, DNI, TEL
+          <div class="section-label" style="margin-bottom:8px;">Estructura del Excel</div>
+          <div style="font-size:12px;color:var(--gris-med);line-height:1.9;">
+            🚛 <strong>Hoja "TRACTOR"</strong> — tractores y camiones<br>
+            🚚 <strong>Hoja "SEMIRREMOLQUES"</strong> — semis y remolques<br>
+            📋 <strong>Hoja "UNIDADES"</strong> — vehículos con SENASA (enriquece los datos de arriba)<br>
+            👤 <strong>Hoja "CHOFERES"</strong> — conductores (NOMBRE, DNI, TEL)
           </div>
         </div>
       </div>
@@ -1939,25 +1941,36 @@ function isSemi(tipo) {
 }
 
 // ── Columnas Excel → campos DB ─────────────────────────────────────────────
+// Mapeo ampliado para cubrir los nombres reales del Excel de Vila
 const COL_MAP_UNIDADES = {
-  'PATENTE': 'patente', 'DOMINIO': 'patente',
-  'TIPO': 'tipo',
+  // Patente
+  'PATENTE': 'patente', 'DOMINIO': 'patente', 'PLACA': 'patente',
+  // Tipo / Categoría
+  'TIPO': 'tipo', 'TIPO UNIDAD': 'tipo',
+  'CATEGORIA': 'categoria', 'SUBCATEGORIA': 'subcategoria',
+  // Vehículo
   'MARCA': 'marca',
   'MODELO': 'modelo',
-  'AÑO': 'anio', 'ANO': 'anio', 'AÑO FAB': 'anio',
-  'CHASIS': 'chasis', 'NRO CHASIS': 'chasis', 'Nº CHASIS': 'chasis',
+  'AÑO': 'anio', 'ANO': 'anio', 'AÑO FAB': 'anio', 'ANIO': 'anio',
+  'CHASIS': 'chasis', 'NRO CHASIS': 'chasis', 'Nº CHASIS': 'chasis', 'CHASIS NRO': 'chasis',
+  // Seguro — cubre "POLIZA NRI" del Excel real
   'SEGURO': 'seguro', 'ASEGURADORA': 'seguro',
-  'POLIZA': 'poliza', 'PÓLIZA': 'poliza', 'NRO POLIZA': 'poliza', 'NRO PÓLIZA': 'poliza',
-  'VTO POLIZA': 'vtoPoliza', 'VTO_POLIZA': 'vtoPoliza', 'VENC POLIZA': 'vtoPoliza',
+  'POLIZA': 'poliza', 'PÓLIZA': 'poliza',
+  'POLIZA NRI': 'poliza', 'POLIZA NRO': 'poliza',           // nombre real del Excel
+  'NRO POLIZA': 'poliza', 'NRO PÓLIZA': 'poliza',
+  'VTO POLIZA': 'vtoPoliza', 'VTO POLIZ': 'vtoPoliza',     // "VTO POLIZ" truncado del Excel
+  'VTO_POLIZA': 'vtoPoliza', 'VENC POLIZA': 'vtoPoliza',
   'VTO PÓLIZA': 'vtoPoliza', 'VTO_PÓLIZA': 'vtoPoliza',
-  'SENASA NRO': 'senasaNro', 'SENASA_NRO': 'senasaNro', 'NRO SENASA': 'senasaNro',
+  // SENASA — "SENASA" en el Excel = fecha vencimiento; "NRO SENASA" = número
+  'SENASA': 'vtoSenasa',                                     // columna real del Excel
+  'NRO SENASA': 'senasaNro',                                 // columna real del Excel
+  'SENASA NRO': 'senasaNro', 'SENASA_NRO': 'senasaNro',
   'VTO SENASA': 'vtoSenasa', 'VTO_SENASA': 'vtoSenasa', 'VENC SENASA': 'vtoSenasa',
-  'CATEGORIA': 'categoria', 'SUBCATEGORIA': 'subcategoria',
 };
 const COL_MAP_CHOFERES = {
-  'NOMBRE': 'nombre', 'APELLIDO Y NOMBRE': 'nombre',
-  'DNI': 'dni', 'DOCUMENTO': 'dni',
-  'TEL': 'tel', 'TELEFONO': 'tel', 'TELÉFONO': 'tel', 'CELULAR': 'tel',
+  'NOMBRE': 'nombre', 'APELLIDO Y NOMBRE': 'nombre', 'APELLIDO NOMBRE': 'nombre',
+  'DNI': 'dni', 'DOCUMENTO': 'dni', 'CUIT': 'dni',
+  'TEL': 'tel', 'TELEFONO': 'tel', 'TELÉFONO': 'tel', 'CELULAR': 'tel', 'MOVIL': 'tel',
 };
 
 function normalizeHeader(h) {
@@ -2026,6 +2039,11 @@ function adminDrop(e) {
 }
 
 // ── Leer Excel con SheetJS ─────────────────────────────────────────────────
+// Estructura del Excel de Vila:
+//   TRACTOR       → todos los tractores/camiones
+//   SEMIRREMOLQUES → todos los semis/remolques
+//   UNIDADES      → vehículos con SENASA (usado para enriquecer TRACTOR+SEMI)
+//   CHOFERES      → conductores
 function adminFileSelected(file) {
   if (!file) return;
   const ext = file.name.split('.').pop().toLowerCase();
@@ -2040,99 +2058,117 @@ function adminFileSelected(file) {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array', cellDates: true });
 
-      // Buscar hoja UNIDADES (case-insensitive)
-      const sheetNameUni = workbook.SheetNames.find(n =>
-        n.trim().toUpperCase().includes('UNIDAD') || n.trim().toUpperCase().includes('VEHICULO')
-      );
-      const sheetNameCho = workbook.SheetNames.find(n =>
-        n.trim().toUpperCase().includes('CHOFER') || n.trim().toUpperCase().includes('CONDUCTOR')
+      const names = workbook.SheetNames;
+      // Busca hoja por palabras clave (case-insensitive)
+      const findSheet = (...keywords) => names.find(n =>
+        keywords.some(k => n.trim().toUpperCase().includes(k.toUpperCase()))
       );
 
-      if (!sheetNameUni) {
-        showToast('⚠️ No se encontró la hoja UNIDADES en el Excel');
+      const sheetTrac = findSheet('TRACTOR');
+      const sheetSemi = findSheet('SEMI', 'REMOLQUE');
+      const sheetUni  = findSheet('UNIDAD', 'VEHICULO');
+      const sheetCho  = findSheet('CHOFER', 'CONDUCTOR');
+
+      if (!sheetCho) {
+        showToast('⚠️ No se encontró la hoja CHOFERES');
         return;
       }
-      if (!sheetNameCho) {
-        showToast('⚠️ No se encontró la hoja CHOFERES en el Excel');
+      if (!sheetTrac && !sheetSemi && !sheetUni) {
+        showToast('⚠️ No se encontraron hojas de vehículos. Hojas disponibles: ' + names.join(', '));
         return;
       }
 
-      const wsUni = workbook.Sheets[sheetNameUni];
-      const wsCho = workbook.Sheets[sheetNameCho];
+      // ── Helper: parsear cualquier hoja de vehículos ──────────────────────
+      function parseVehiculos(sheetName) {
+        if (!sheetName) return [];
+        const ws = workbook.Sheets[sheetName];
+        const raw = XLSX.utils.sheet_to_json(ws, { raw: false, defval: '' });
+        return raw.map(row => {
+          const obj = {
+            patente:'', tipo:'', marca:'', modelo:'', anio:'',
+            chasis:'', seguro:'', poliza:'', vtoPoliza:'',
+            senasaNro:'No corresponde', vtoSenasa:'No corresponde'
+          };
+          Object.entries(row).forEach(([key, val]) => {
+            const normKey = normalizeHeader(key);
+            const field = COL_MAP_UNIDADES[normKey];
+            if (field) obj[field] = cellToString(val);
+          });
+          if (!obj.senasaNro) obj.senasaNro = 'No corresponde';
+          if (!obj.vtoSenasa) obj.vtoSenasa = 'No corresponde';
+          delete obj.categoria; delete obj.subcategoria;
+          return obj;
+        }).filter(obj => obj.patente.trim() !== '');
+      }
 
-      // Convertir a array de objetos
-      const rawUni = XLSX.utils.sheet_to_json(wsUni, { raw: false, defval: '' });
-      const rawCho = XLSX.utils.sheet_to_json(wsCho, { raw: false, defval: '' });
+      let tractores = [], semis = [];
 
-      // Mapear columnas UNIDADES
-      const tractores = [];
-      const semis = [];
+      if (sheetTrac || sheetSemi) {
+        // ── Caso principal: hojas TRACTOR y SEMIRREMOLQUES separadas ────────
+        tractores = parseVehiculos(sheetTrac);
+        semis = parseVehiculos(sheetSemi);
 
-      rawUni.forEach(row => {
-        if (!row || Object.keys(row).length === 0) return;
-        const obj = { patente:'', tipo:'', marca:'', modelo:'', anio:'',
-          chasis:'', seguro:'', poliza:'', vtoPoliza:'', senasaNro:'No corresponde', vtoSenasa:'No corresponde' };
+        // Enriquecer con datos de SENASA desde hoja UNIDADES (si existe)
+        if (sheetUni) {
+          const uniData = parseVehiculos(sheetUni);
+          // Construir mapa patente → datos SENASA + seguro
+          const senasaMap = {};
+          uniData.forEach(u => {
+            const key = (u.patente || '').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+            senasaMap[key] = {
+              senasaNro: u.senasaNro || 'No corresponde',
+              vtoSenasa: u.vtoSenasa || 'No corresponde',
+              seguro:    u.seguro    || '',
+              poliza:    u.poliza    || '',
+              vtoPoliza: u.vtoPoliza || '',
+            };
+          });
+          // Aplicar SENASA a tractores y semis
+          [...tractores, ...semis].forEach(v => {
+            const key = (v.patente || '').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+            const s = senasaMap[key];
+            if (s) {
+              if (!v.senasaNro || v.senasaNro === 'No corresponde') v.senasaNro = s.senasaNro;
+              if (!v.vtoSenasa || v.vtoSenasa === 'No corresponde') v.vtoSenasa = s.vtoSenasa;
+              if (!v.seguro && s.seguro) v.seguro = s.seguro;
+              if (!v.poliza && s.poliza) v.poliza = s.poliza;
+              if (!v.vtoPoliza && s.vtoPoliza) v.vtoPoliza = s.vtoPoliza;
+            }
+          });
+        }
 
-        Object.entries(row).forEach(([key, val]) => {
-          const normKey = normalizeHeader(key);
-          const field = COL_MAP_UNIDADES[normKey];
-          if (field) obj[field] = cellToString(val);
+      } else if (sheetUni) {
+        // ── Fallback: solo hoja UNIDADES, separar por TIPO ──────────────────
+        parseVehiculos(sheetUni).forEach(obj => {
+          const cat = (obj.categoria || obj.subcategoria || '').toUpperCase();
+          let goSemi;
+          if (cat.includes('SEMI') || cat.includes('REMOLQUE') || cat.includes('ACOPLADO'))
+            goSemi = true;
+          else if (cat.includes('TRACTO') || cat.includes('CAMION') || cat.includes('VEHIC'))
+            goSemi = false;
+          else
+            goSemi = isSemi(obj.tipo);
+          (goSemi ? semis : tractores).push(obj);
         });
+      }
 
-        if (!obj.patente) return; // Skip empty rows
-
-        // Fix SENASA vacío
-        if (!obj.senasaNro) obj.senasaNro = 'No corresponde';
-        if (!obj.vtoSenasa) obj.vtoSenasa = 'No corresponde';
-
-        // Determinar si es semi o tractor
-        // Si tiene columna CATEGORIA explícita, usarla
-        const catField = obj['categoria'] || obj['subcategoria'] || '';
-        const catUpper = catField.toUpperCase();
-
-        let goToSemis = false;
-        if (catUpper.includes('SEMI') || catUpper.includes('REMOLQUE') || catUpper.includes('ACOPLADO')) {
-          goToSemis = true;
-        } else if (catUpper.includes('TRACTO') || catUpper.includes('CAMION') || catUpper.includes('VEHIC')) {
-          goToSemis = false;
-        } else {
-          // Fallback: usar TIPO
-          goToSemis = isSemi(obj.tipo);
-        }
-
-        // Limpiar campos internos que no van en la DB
-        delete obj['categoria'];
-        delete obj['subcategoria'];
-
-        if (goToSemis) {
-          semis.push(obj);
-        } else {
-          tractores.push(obj);
-        }
-      });
-
-      // Mapear columnas CHOFERES
-      const choferes = [];
-      rawCho.forEach(row => {
-        if (!row || Object.keys(row).length === 0) return;
+      // ── Parsear CHOFERES ──────────────────────────────────────────────────
+      const rawCho = XLSX.utils.sheet_to_json(workbook.Sheets[sheetCho], { raw: false, defval: '' });
+      const choferes = rawCho.map(row => {
         const obj = { nombre: '', dni: '', tel: '' };
         Object.entries(row).forEach(([key, val]) => {
-          const normKey = normalizeHeader(key);
-          const field = COL_MAP_CHOFERES[normKey];
+          const field = COL_MAP_CHOFERES[normalizeHeader(key)];
           if (field) obj[field] = cellToString(val);
         });
-        if (!obj.nombre) return; // Skip empty rows
-        choferes.push(obj);
-      });
+        return obj;
+      }).filter(obj => obj.nombre.trim() !== '');
 
-      // Ordenar alfabéticamente
-      choferes.sort((a,b) => a.nombre.localeCompare(b.nombre));
+      // ── Ordenar ───────────────────────────────────────────────────────────
+      choferes.sort((a,b)  => a.nombre.localeCompare(b.nombre));
       tractores.sort((a,b) => a.patente.localeCompare(b.patente));
-      semis.sort((a,b) => a.patente.localeCompare(b.patente));
+      semis.sort((a,b)     => a.patente.localeCompare(b.patente));
 
       pendingDB = { choferes, tractores, semis };
-
-      // Mostrar preview
       showPreview(file.name, pendingDB);
 
     } catch(err) {
