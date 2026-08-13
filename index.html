@@ -1998,16 +1998,43 @@ function normalizeHeader(h) {
 
 function cellToString(v) {
   if (v === null || v === undefined) return '';
-  // Date object (cellDates:true) → DD/MM/YYYY formato argentino
-  if (v instanceof Date && !isNaN(v)) {
+
+  // 1. Objeto Date de JavaScript (SheetJS cellDates:true)
+  if (v instanceof Date) {
+    if (isNaN(v)) return '';
     const d = String(v.getUTCDate()).padStart(2, '0');
     const m = String(v.getUTCMonth() + 1).padStart(2, '0');
     const y = v.getUTCFullYear();
     return `${d}/${m}/${y}`;
   }
-  // Número → string limpio (DNI, poliza, etc.)
-  if (typeof v === 'number') return String(v);
-  return String(v).trim();
+
+  // 2. Número — puede ser serial de fecha Excel (rango ~40000-60000 = años 2009-2064)
+  //    o un DNI/póliza (generalmente < 100.000.000)
+  if (typeof v === 'number') {
+    if (Number.isFinite(v) && v >= 40000 && v <= 60000) {
+      // Serial de fecha Excel → UTC midnight → DD/MM/YYYY
+      const dt = new Date(Math.round((v - 25569) * 86400000));
+      const d = String(dt.getUTCDate()).padStart(2, '0');
+      const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
+      const y = dt.getUTCFullYear();
+      return `${d}/${m}/${y}`;
+    }
+    // DNI, póliza, etc. — entero sin decimales
+    return Number.isInteger(v) ? String(v) : String(Math.round(v));
+  }
+
+  // 3. String — puede venir de raw:false con formato mm-dd-yy u otros
+  const s = String(v).trim();
+
+  // Si parece "mm-dd-yy" o "m-d-yy" (formato US con guiones del Excel)
+  if (/^\d{1,2}-\d{1,2}-\d{2,4}$/.test(s)) {
+    const p = s.split('-');
+    let [mm, dd, yy] = p.map(Number);
+    if (yy < 100) yy += 2000;
+    return `${String(dd).padStart(2,'0')}/${String(mm).padStart(2,'0')}/${yy}`;
+  }
+
+  return s;
 }
 
 // ── Autenticación admin ────────────────────────────────────────────────────
@@ -2208,12 +2235,27 @@ function adminFileSelected(file) {
       pendingDB = { choferes, tractores, semis };
 
       // Diagnóstico
+      // Debug: mostrar valor crudo de fecha SENASA del primer tractor para diagnóstico
+      let rawSenasaVal = '(no disponible)';
+      let rawSenasaType = '(no disponible)';
+      if (sheetTrac) {
+        const firstRow = XLSX.utils.sheet_to_json(workbook.Sheets[sheetTrac], {raw:true, cellDates:true})[0] || {};
+        const senasaKey = Object.keys(firstRow).find(k => normalizeHeader(k) === 'SENASA');
+        if (senasaKey) {
+          const sv = firstRow[senasaKey];
+          rawSenasaVal = sv instanceof Date ? `Date(${sv.toISOString()})` : `${typeof sv}: ${JSON.stringify(sv)}`;
+          rawSenasaType = typeof sv;
+        }
+      }
+
       pendingDB._debug = {
         hojas: names.join(', '),
         colsTractor: sheetTrac ? Object.keys(XLSX.utils.sheet_to_json(workbook.Sheets[sheetTrac], {raw:true, cellDates:true})[0]||{}).join(' | ') : '(no encontrada)',
         colsSemi:    sheetSemi ? Object.keys(XLSX.utils.sheet_to_json(workbook.Sheets[sheetSemi], {raw:true, cellDates:true})[0]||{}).join(' | ') : '(no encontrada)',
         colsUni:     sheetUni  ? Object.keys(XLSX.utils.sheet_to_json(workbook.Sheets[sheetUni],  {raw:true, cellDates:true})[0]||{}).join(' | ') : '(no encontrada)',
         colsCho:     sheetCho  ? Object.keys(XLSX.utils.sheet_to_json(workbook.Sheets[sheetCho],  {raw:true, cellDates:true})[0]||{}).join(' | ') : '(no encontrada)',
+        rawSenasa: `tipo=${rawSenasaType} | valor=${rawSenasaVal}`,
+        senasaConvertido: (() => { try { const firstRow = XLSX.utils.sheet_to_json(workbook.Sheets[sheetTrac], {raw:true, cellDates:true})[0]||{}; const sk = Object.keys(firstRow).find(k=>normalizeHeader(k)==='SENASA'); return sk ? cellToString(firstRow[sk]) : '(no encontrado)'; } catch(e){ return e.message; }})(),
       };
 
       showPreview(file.name, pendingDB);
@@ -2289,7 +2331,9 @@ function showPreview(fileName, db) {
     if (d.colsTractor) html += `<strong>TRACTOR cols:</strong> ${d.colsTractor}<br>`;
     if (d.colsSemi)    html += `<strong>SEMIRREMOLQUES cols:</strong> ${d.colsSemi}<br>`;
     if (d.colsUni)     html += `<strong>UNIDADES cols:</strong> ${d.colsUni}<br>`;
-    if (d.colsCho)     html += `<strong>CHOFERES cols:</strong> ${d.colsCho}`;
+    if (d.colsCho)     html += `<strong>CHOFERES cols:</strong> ${d.colsCho}<br>`;
+    if (d.rawSenasa)   html += `<strong>SENASA raw (1er tractor):</strong> ${d.rawSenasa}<br>`;
+    if (d.senasaConvertido) html += `<strong>SENASA convertido:</strong> ${d.senasaConvertido}`;
     html += `</div>`;
   }
 
