@@ -1280,9 +1280,23 @@ setDate();
 // ── VENCIMIENTO COLOR ────────────────────────────────────────────────────────
 function dateClass(dateStr) {
   if (!dateStr || dateStr === 'No corresponde' || dateStr === 'NO') return '';
-  const parts = dateStr.split('/');
-  if (parts.length !== 3) return '';
-  const d = new Date(+parts[2], +parts[1]-1, +parts[0]);
+  // Soporta DD/MM/YYYY (guardado por la app) y fallbacks
+  let day, month, year;
+  if (dateStr.includes('/')) {
+    const p = dateStr.split('/');
+    if (p.length !== 3) return '';
+    [day, month, year] = p.map(Number);
+  } else if (dateStr.includes('-')) {
+    // Formato mm-dd-yy del Excel en crudo
+    const p = dateStr.split('-');
+    if (p.length !== 3) return '';
+    [month, day, year] = p.map(Number);
+    if (year < 100) year += 2000; // yy → yyyy
+  } else {
+    return '';
+  }
+  if (!day || !month || !year) return '';
+  const d = new Date(year, month - 1, day);
   const now = new Date(); now.setHours(0,0,0,0);
   const diff = (d - now) / 86400000;
   if (diff < 0)   return 'vencido';
@@ -2081,7 +2095,7 @@ function adminFileSelected(file) {
       // ── Helper: parsear hoja → array de objetos mapeados ─────────────────
       function parseSheet(sheetName, colMap) {
         if (!sheetName) return [];
-        const raw = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { raw: false, defval: '' });
+        const raw = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { raw: true, cellDates: true, defval: '' });
         return raw.map(row => {
           const obj = {};
           Object.entries(row).forEach(([key, val]) => {
@@ -2093,7 +2107,7 @@ function adminFileSelected(file) {
       }
 
       // ── 1. UNIDADES → maestro completo de vehículos ──────────────────────
-      const uniRaw = XLSX.utils.sheet_to_json(workbook.Sheets[sheetUni], { raw: false, defval: '' });
+      const uniRaw = XLSX.utils.sheet_to_json(workbook.Sheets[sheetUni], { raw: true, cellDates: true, defval: '' });
       const uniMap = {}; // PATENTE_KEY → objeto completo
 
       uniRaw.forEach(row => {
@@ -2120,7 +2134,7 @@ function adminFileSelected(file) {
       //              PERMISO INT., SEGURO, POLIZA NRO, VTO POLIZA
       function parseCumplimiento(sheetName) {
         if (!sheetName) return {};
-        const raw = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { raw: false, defval: '' });
+        const raw = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { raw: true, cellDates: true, defval: '' });
         const map = {};
         raw.forEach(row => {
           const c = { senasaNro:'No corresponde', vtoSenasa:'No corresponde',
@@ -2176,7 +2190,7 @@ function adminFileSelected(file) {
       }
 
       // ── 4. CHOFERES ───────────────────────────────────────────────────────
-      const rawCho = XLSX.utils.sheet_to_json(workbook.Sheets[sheetCho], { raw: false, defval: '' });
+      const rawCho = XLSX.utils.sheet_to_json(workbook.Sheets[sheetCho], { raw: true, cellDates: true, defval: '' });
       const choferes = rawCho.map(row => {
         const obj = { nombre: '', dni: '', tel: '' };
         Object.entries(row).forEach(([key, val]) => {
@@ -2196,10 +2210,10 @@ function adminFileSelected(file) {
       // Diagnóstico
       pendingDB._debug = {
         hojas: names.join(', '),
-        colsTractor: sheetTrac ? Object.keys(XLSX.utils.sheet_to_json(workbook.Sheets[sheetTrac], {raw:false})[0]||{}).join(' | ') : '(no encontrada)',
-        colsSemi:    sheetSemi ? Object.keys(XLSX.utils.sheet_to_json(workbook.Sheets[sheetSemi], {raw:false})[0]||{}).join(' | ') : '(no encontrada)',
-        colsUni:     sheetUni  ? Object.keys(XLSX.utils.sheet_to_json(workbook.Sheets[sheetUni],  {raw:false})[0]||{}).join(' | ') : '(no encontrada)',
-        colsCho:     sheetCho  ? Object.keys(XLSX.utils.sheet_to_json(workbook.Sheets[sheetCho],  {raw:false})[0]||{}).join(' | ') : '(no encontrada)',
+        colsTractor: sheetTrac ? Object.keys(XLSX.utils.sheet_to_json(workbook.Sheets[sheetTrac], {raw:true, cellDates:true})[0]||{}).join(' | ') : '(no encontrada)',
+        colsSemi:    sheetSemi ? Object.keys(XLSX.utils.sheet_to_json(workbook.Sheets[sheetSemi], {raw:true, cellDates:true})[0]||{}).join(' | ') : '(no encontrada)',
+        colsUni:     sheetUni  ? Object.keys(XLSX.utils.sheet_to_json(workbook.Sheets[sheetUni],  {raw:true, cellDates:true})[0]||{}).join(' | ') : '(no encontrada)',
+        colsCho:     sheetCho  ? Object.keys(XLSX.utils.sheet_to_json(workbook.Sheets[sheetCho],  {raw:true, cellDates:true})[0]||{}).join(' | ') : '(no encontrada)',
       };
 
       showPreview(file.name, pendingDB);
