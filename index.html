@@ -1956,7 +1956,7 @@ const COL_MAP_UNIDADES = {
   // Seguro — cubre "POLIZA NRI" del Excel real
   'SEGURO': 'seguro', 'ASEGURADORA': 'seguro',
   'POLIZA': 'poliza', 'PÓLIZA': 'poliza',
-  'POLIZA NRI': 'poliza', 'POLIZA NRO': 'poliza',           // nombre real del Excel
+  'POLIZA NRI': 'poliza', 'POLIZA NRO': 'poliza',       // nombre real del Excel           // nombre real del Excel
   'NRO POLIZA': 'poliza', 'NRO PÓLIZA': 'poliza',
   'VTO POLIZA': 'vtoPoliza', 'VTO POLIZ': 'vtoPoliza',     // "VTO POLIZ" truncado del Excel
   'VTO_POLIZA': 'vtoPoliza', 'VENC POLIZA': 'vtoPoliza',
@@ -1969,8 +1969,10 @@ const COL_MAP_UNIDADES = {
 };
 const COL_MAP_CHOFERES = {
   'NOMBRE': 'nombre', 'APELLIDO Y NOMBRE': 'nombre', 'APELLIDO NOMBRE': 'nombre',
+  'CHOFER': 'nombre',                                    // nombre real del Excel
   'DNI': 'dni', 'DOCUMENTO': 'dni', 'CUIT': 'dni',
-  'TEL': 'tel', 'TELEFONO': 'tel', 'TELÉFONO': 'tel', 'CELULAR': 'tel', 'MOVIL': 'tel',
+  'TEL': 'tel', 'TELEFONO': 'tel', 'TELÉFONO': 'tel',   // "TELEFONO" del Excel
+  'CELULAR': 'tel', 'MOVIL': 'tel',
 };
 
 function normalizeHeader(h) {
@@ -2039,11 +2041,11 @@ function adminDrop(e) {
 }
 
 // ── Leer Excel con SheetJS ─────────────────────────────────────────────────
-// Estructura del Excel de Vila:
-//   TRACTOR       → todos los tractores/camiones
-//   SEMIRREMOLQUES → todos los semis/remolques
-//   UNIDADES      → vehículos con SENASA (usado para enriquecer TRACTOR+SEMI)
-//   CHOFERES      → conductores
+// Estructura real del Excel de Vila:
+//   UNIDADES       → maestro de vehículos (PATENTE, MARCA, MODELO, AÑO, TIPO, CHASIS, etc.)
+//   TRACTOR        → datos de cumplimiento de tractores (SENASA, POLIZA, SEGURO)
+//   SEMIRREMOLQUES → datos de cumplimiento de semis
+//   CHOFERES       → conductores (col. CHOFER, DNI, TELEFONO)
 function adminFileSelected(file) {
   if (!file) return;
   const ext = file.name.split('.').pop().toLowerCase();
@@ -2059,100 +2061,116 @@ function adminFileSelected(file) {
       const workbook = XLSX.read(data, { type: 'array', cellDates: true });
 
       const names = workbook.SheetNames;
-      // Busca hoja por palabras clave (case-insensitive)
-      const findSheet = (...keywords) => names.find(n =>
-        keywords.some(k => n.trim().toUpperCase().includes(k.toUpperCase()))
+      const findSheet = (...kws) => names.find(n =>
+        kws.some(k => n.trim().toUpperCase().includes(k.toUpperCase()))
       );
 
+      const sheetUni  = findSheet('UNIDAD', 'VEHICULO');
       const sheetTrac = findSheet('TRACTOR');
       const sheetSemi = findSheet('SEMI', 'REMOLQUE');
-      const sheetUni  = findSheet('UNIDAD', 'VEHICULO');
       const sheetCho  = findSheet('CHOFER', 'CONDUCTOR');
 
-      if (!sheetCho) {
-        showToast('⚠️ No se encontró la hoja CHOFERES');
-        return;
-      }
-      if (!sheetTrac && !sheetSemi && !sheetUni) {
-        showToast('⚠️ No se encontraron hojas de vehículos. Hojas disponibles: ' + names.join(', '));
-        return;
-      }
+      if (!sheetCho) { showToast('⚠️ No se encontró la hoja CHOFERES'); return; }
+      if (!sheetUni)  { showToast('⚠️ No se encontró la hoja UNIDADES'); return; }
 
-      // ── Helper: parsear cualquier hoja de vehículos ──────────────────────
-      function parseVehiculos(sheetName) {
+      // ── Helper: parsear hoja → array de objetos mapeados ─────────────────
+      function parseSheet(sheetName, colMap) {
         if (!sheetName) return [];
-        const ws = workbook.Sheets[sheetName];
-        const raw = XLSX.utils.sheet_to_json(ws, { raw: false, defval: '' });
+        const raw = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { raw: false, defval: '' });
         return raw.map(row => {
-          const obj = {
-            patente:'', tipo:'', marca:'', modelo:'', anio:'',
-            chasis:'', seguro:'', poliza:'', vtoPoliza:'',
-            senasaNro:'No corresponde', vtoSenasa:'No corresponde'
-          };
+          const obj = {};
           Object.entries(row).forEach(([key, val]) => {
-            const normKey = normalizeHeader(key);
-            const field = COL_MAP_UNIDADES[normKey];
+            const field = colMap[normalizeHeader(key)];
             if (field) obj[field] = cellToString(val);
           });
-          if (!obj.senasaNro) obj.senasaNro = 'No corresponde';
-          if (!obj.vtoSenasa) obj.vtoSenasa = 'No corresponde';
-          delete obj.categoria; delete obj.subcategoria;
           return obj;
-        }).filter(obj => obj.patente.trim() !== '');
+        }).filter(obj => obj.patente && obj.patente.trim() !== '');
       }
 
-      let tractores = [], semis = [];
+      // ── 1. UNIDADES → maestro completo de vehículos ──────────────────────
+      const uniRaw = XLSX.utils.sheet_to_json(workbook.Sheets[sheetUni], { raw: false, defval: '' });
+      const uniMap = {}; // PATENTE_KEY → objeto completo
 
-      if (sheetTrac || sheetSemi) {
-        // ── Caso principal: hojas TRACTOR y SEMIRREMOLQUES separadas ────────
-        tractores = parseVehiculos(sheetTrac);
-        semis = parseVehiculos(sheetSemi);
-
-        // Enriquecer con datos de SENASA desde hoja UNIDADES (si existe)
-        if (sheetUni) {
-          const uniData = parseVehiculos(sheetUni);
-          // Construir mapa patente → datos SENASA + seguro
-          const senasaMap = {};
-          uniData.forEach(u => {
-            const key = (u.patente || '').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
-            senasaMap[key] = {
-              senasaNro: u.senasaNro || 'No corresponde',
-              vtoSenasa: u.vtoSenasa || 'No corresponde',
-              seguro:    u.seguro    || '',
-              poliza:    u.poliza    || '',
-              vtoPoliza: u.vtoPoliza || '',
-            };
-          });
-          // Aplicar SENASA a tractores y semis
-          [...tractores, ...semis].forEach(v => {
-            const key = (v.patente || '').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
-            const s = senasaMap[key];
-            if (s) {
-              if (!v.senasaNro || v.senasaNro === 'No corresponde') v.senasaNro = s.senasaNro;
-              if (!v.vtoSenasa || v.vtoSenasa === 'No corresponde') v.vtoSenasa = s.vtoSenasa;
-              if (!v.seguro && s.seguro) v.seguro = s.seguro;
-              if (!v.poliza && s.poliza) v.poliza = s.poliza;
-              if (!v.vtoPoliza && s.vtoPoliza) v.vtoPoliza = s.vtoPoliza;
-            }
-          });
+      uniRaw.forEach(row => {
+        const obj = {
+          patente:'', tipo:'', marca:'', modelo:'', anio:'',
+          chasis:'', seguro:'', poliza:'', vtoPoliza:'',
+          senasaNro:'No corresponde', vtoSenasa:'No corresponde'
+        };
+        Object.entries(row).forEach(([key, val]) => {
+          const field = COL_MAP_UNIDADES[normalizeHeader(key)];
+          if (field) obj[field] = cellToString(val);
+        });
+        if (!obj.senasaNro) obj.senasaNro = 'No corresponde';
+        if (!obj.vtoSenasa) obj.vtoSenasa = 'No corresponde';
+        delete obj.categoria; delete obj.subcategoria;
+        if (obj.patente.trim()) {
+          const key = obj.patente.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+          uniMap[key] = obj;
         }
+      });
 
-      } else if (sheetUni) {
-        // ── Fallback: solo hoja UNIDADES, separar por TIPO ──────────────────
-        parseVehiculos(sheetUni).forEach(obj => {
-          const cat = (obj.categoria || obj.subcategoria || '').toUpperCase();
-          let goSemi;
-          if (cat.includes('SEMI') || cat.includes('REMOLQUE') || cat.includes('ACOPLADO'))
-            goSemi = true;
-          else if (cat.includes('TRACTO') || cat.includes('CAMION') || cat.includes('VEHIC'))
-            goSemi = false;
-          else
-            goSemi = isSemi(obj.tipo);
-          (goSemi ? semis : tractores).push(obj);
+      // ── 2. TRACTOR y SEMIRREMOLQUES → datos de cumplimiento ──────────────
+      //    Columnas: PATENTE, CHASIS, MOTOR, TECNICA, SENASA, NRO SENASA,
+      //              PERMISO INT., SEGURO, POLIZA NRO, VTO POLIZA
+      function parseCumplimiento(sheetName) {
+        if (!sheetName) return {};
+        const raw = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { raw: false, defval: '' });
+        const map = {};
+        raw.forEach(row => {
+          const c = { senasaNro:'No corresponde', vtoSenasa:'No corresponde',
+                      seguro:'', poliza:'', vtoPoliza:'', chasis:'' };
+          Object.entries(row).forEach(([key, val]) => {
+            const nk = normalizeHeader(key);
+            const field = COL_MAP_UNIDADES[nk];
+            if (field) c[field] = cellToString(val);
+          });
+          const pat = (c.patente||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+          if (pat) {
+            if (!c.senasaNro) c.senasaNro = 'No corresponde';
+            if (!c.vtoSenasa) c.vtoSenasa = 'No corresponde';
+            map[pat] = c;
+          }
+        });
+        return map;
+      }
+
+      const tracMap  = parseCumplimiento(sheetTrac);
+      const semiMap  = parseCumplimiento(sheetSemi);
+
+      // ── 3. Construir tractores y semis ───────────────────────────────────
+      //    Usar TRACTOR/SEMI para saber qué patentes van a cada grupo,
+      //    y enriquecerlas con UNIDADES (marca, modelo, año, tipo)
+      function buildVehiculos(cumplMap) {
+        return Object.entries(cumplMap).map(([key, c]) => {
+          const base = uniMap[key] || {};
+          return {
+            patente:   c.patente  || base.patente  || key,
+            tipo:      base.tipo   || '',
+            marca:     base.marca  || '',
+            modelo:    base.modelo || '',
+            anio:      base.anio   || '',
+            chasis:    c.chasis   || base.chasis  || '',
+            seguro:    c.seguro   || base.seguro  || '',
+            poliza:    c.poliza   || base.poliza  || '',
+            vtoPoliza: c.vtoPoliza|| base.vtoPoliza|| '',
+            senasaNro: (c.senasaNro && c.senasaNro !== 'No corresponde') ? c.senasaNro : (base.senasaNro || 'No corresponde'),
+            vtoSenasa: (c.vtoSenasa && c.vtoSenasa !== 'No corresponde') ? c.vtoSenasa : (base.vtoSenasa || 'No corresponde'),
+          };
         });
       }
 
-      // ── Parsear CHOFERES ──────────────────────────────────────────────────
+      let tractores = buildVehiculos(tracMap);
+      let semis     = buildVehiculos(semiMap);
+
+      // Si no hay hojas TRACTOR/SEMI, usar UNIDADES con separación por TIPO
+      if (!tractores.length && !semis.length) {
+        Object.values(uniMap).forEach(obj => {
+          (isSemi(obj.tipo) ? semis : tractores).push(obj);
+        });
+      }
+
+      // ── 4. CHOFERES ───────────────────────────────────────────────────────
       const rawCho = XLSX.utils.sheet_to_json(workbook.Sheets[sheetCho], { raw: false, defval: '' });
       const choferes = rawCho.map(row => {
         const obj = { nombre: '', dni: '', tel: '' };
@@ -2163,12 +2181,22 @@ function adminFileSelected(file) {
         return obj;
       }).filter(obj => obj.nombre.trim() !== '');
 
-      // ── Ordenar ───────────────────────────────────────────────────────────
+      // ── 5. Ordenar ────────────────────────────────────────────────────────
       choferes.sort((a,b)  => a.nombre.localeCompare(b.nombre));
       tractores.sort((a,b) => a.patente.localeCompare(b.patente));
       semis.sort((a,b)     => a.patente.localeCompare(b.patente));
 
       pendingDB = { choferes, tractores, semis };
+
+      // Diagnóstico
+      pendingDB._debug = {
+        hojas: names.join(', '),
+        colsTractor: sheetTrac ? Object.keys(XLSX.utils.sheet_to_json(workbook.Sheets[sheetTrac], {raw:false})[0]||{}).join(' | ') : '(no encontrada)',
+        colsSemi:    sheetSemi ? Object.keys(XLSX.utils.sheet_to_json(workbook.Sheets[sheetSemi], {raw:false})[0]||{}).join(' | ') : '(no encontrada)',
+        colsUni:     sheetUni  ? Object.keys(XLSX.utils.sheet_to_json(workbook.Sheets[sheetUni],  {raw:false})[0]||{}).join(' | ') : '(no encontrada)',
+        colsCho:     sheetCho  ? Object.keys(XLSX.utils.sheet_to_json(workbook.Sheets[sheetCho],  {raw:false})[0]||{}).join(' | ') : '(no encontrada)',
+      };
+
       showPreview(file.name, pendingDB);
 
     } catch(err) {
@@ -2231,6 +2259,19 @@ function showPreview(fileName, db) {
       html += `<tr><td>${s.patente}</td><td>${s.tipo}</td><td>${s.marca}</td></tr>`;
     });
     html += `</tbody></table></div>`;
+  }
+
+  // ── Diagnóstico de columnas ──────────────────────────────────────────────
+  if (db._debug) {
+    const d = db._debug;
+    html += `<div class="preview-title" style="margin-top:14px;color:#e67e22;">🔍 Columnas detectadas (para soporte)</div>`;
+    html += `<div style="font-size:10px;background:#fff8f0;border:1.5px solid #e67e22;border-radius:6px;padding:10px;margin-bottom:8px;word-break:break-all;line-height:1.8;color:#333;">`;
+    html += `<strong>Hojas:</strong> ${d.hojas}<br>`;
+    if (d.colsTractor) html += `<strong>TRACTOR cols:</strong> ${d.colsTractor}<br>`;
+    if (d.colsSemi)    html += `<strong>SEMIRREMOLQUES cols:</strong> ${d.colsSemi}<br>`;
+    if (d.colsUni)     html += `<strong>UNIDADES cols:</strong> ${d.colsUni}<br>`;
+    if (d.colsCho)     html += `<strong>CHOFERES cols:</strong> ${d.colsCho}`;
+    html += `</div>`;
   }
 
   wrap.innerHTML = html;
