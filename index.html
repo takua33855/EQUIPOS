@@ -2023,10 +2023,20 @@ function cellToString(v) {
     return Number.isInteger(v) ? String(v) : String(Math.round(v));
   }
 
-  // 3. String — puede venir de raw:false con formato mm-dd-yy u otros
+  // 3. String — SheetJS con formato mm-dd-yy del Excel produce "M/D/YY" o "MM-DD-YY"
   const s = String(v).trim();
 
-  // Si parece "mm-dd-yy" o "m-d-yy" (formato US con guiones del Excel)
+  // "M/D/YY" o "MM/DD/YY" con año de 2 dígitos → formato US de SheetJS
+  // Ej: "7/2/27" = julio 2, 2027 | "7/30/26" = julio 30, 2026
+  if (/^\d{1,2}\/\d{1,2}\/\d{2}$/.test(s)) {
+    const p = s.split('/');
+    const mm = Number(p[0]);  // mes
+    const dd = Number(p[1]);  // día
+    const yy = Number(p[2]) + 2000;  // año 2 dígitos → 4 dígitos
+    return `${String(dd).padStart(2,'0')}/${String(mm).padStart(2,'0')}/${yy}`;
+  }
+
+  // "MM-DD-YY" con guiones
   if (/^\d{1,2}-\d{1,2}-\d{2,4}$/.test(s)) {
     const p = s.split('-');
     let [mm, dd, yy] = p.map(Number);
