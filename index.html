@@ -1311,18 +1311,30 @@ async function loadFromSupabase() {
 
 // Guardar DB completa en Supabase (borrar todo + insertar)
 async function saveToSupabase(db) {
+  // Helper que tira error si Supabase falla
+  async function sbDel(table) {
+    const { error } = await supa.from(table).delete().gte('id', 0);
+    if (error) throw new Error(`Error borrando ${table}: ${error.message}`);
+  }
+  async function sbIns(table, rows) {
+    if (!rows.length) return;
+    const { error } = await supa.from(table).insert(rows);
+    if (error) throw new Error(`Error insertando en ${table}: ${error.message}`);
+  }
+
   // Borrar registros existentes
-  await supa.from('choferes').delete().gte('id', 0);
-  await supa.from('tractores').delete().gte('id', 0);
-  await supa.from('semis').delete().gte('id', 0);
+  await sbDel('choferes');
+  await sbDel('tractores');
+  await sbDel('semis');
+
   // Insertar nuevos en lotes de 500
   const chunk = (arr, n) => Array.from({length: Math.ceil(arr.length/n)}, (_,i) => arr.slice(i*n, i*n+n));
   for (const batch of chunk(db.choferes, 500))
-    await supa.from('choferes').insert(batch.map(c => ({ nombre: c.nombre, dni: c.dni||'', tel: c.tel||'' })));
+    await sbIns('choferes', batch.map(c => ({ nombre: c.nombre, dni: c.dni||'', tel: c.tel||'' })));
   for (const batch of chunk(db.tractores, 500))
-    await supa.from('tractores').insert(batch.map(toSupaV));
+    await sbIns('tractores', batch.map(toSupaV));
   for (const batch of chunk(db.semis, 500))
-    await supa.from('semis').insert(batch.map(toSupaV));
+    await sbIns('semis', batch.map(toSupaV));
 }
 
 // DB inicial: hardcodeada (se reemplaza al cargar desde Supabase en DOMContentLoaded)
