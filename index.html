@@ -1296,9 +1296,9 @@ async function loadFromSupabase() {
     supa.from('semis').select('*').order('patente'),
   ]);
   // Log errores explícitamente (Supabase no tira excepciones, devuelve {error})
-  if (r1.error) { console.error('Supabase choferes error:', r1.error); }
-  if (r2.error) { console.error('Supabase tractores error:', r2.error); }
-  if (r3.error) { console.error('Supabase semis error:', r3.error); }
+  if (r1.error) { console.error('Supabase choferes error:', JSON.stringify(r1.error)); }
+  if (r2.error) { console.error('Supabase tractores error:', JSON.stringify(r2.error)); }
+  if (r3.error) { console.error('Supabase semis error:', JSON.stringify(r3.error)); }
   const ch = r1.data || [], tr = r2.data || [], sm = r3.data || [];
   console.log('Supabase respuesta:', ch.length, 'choferes,', tr.length, 'tractores,', sm.length, 'semis');
   if (!ch.length && !tr.length && !sm.length) return null; // Supabase vacío
@@ -1309,6 +1309,28 @@ async function loadFromSupabase() {
   };
 }
 
+// ── Sincronización en 2do plano: Supabase → localStorage ─────────────────────
+// Se llama al arrancar. No bloquea los dropdowns.
+// Si Supabase tiene datos distintos al caché, actualiza y recarga.
+async function syncFromSupabase() {
+  const data = await loadFromSupabase();
+  if (!data) return; // Sin conexión o Supabase vacío → seguir con caché
+  // Guardar en caché local
+  try { localStorage.setItem('vilaDB_supa_cache', JSON.stringify(data)); } catch(e) {}
+  // Si el caché cambió respecto a lo que hay en pantalla → recargar
+  const changed = data.choferes.length !== DB.choferes.length
+               || data.tractores.length !== DB.tractores.length
+               || data.semis.length !== DB.semis.length;
+  if (changed) {
+    console.log('Supabase tiene datos nuevos — recargando…');
+    location.reload();
+  } else {
+    console.log('Caché sincronizado con Supabase ✅');
+    updateAdminStatus();
+  }
+}
+
+// Guardar DB completa en Supabase (borrar todo + insertar)
 // Guardar DB completa en Supabase (borrar todo + insertar)
 async function saveToSupabase(db) {
   // Helper que tira error si Supabase falla
@@ -1337,8 +1359,21 @@ async function saveToSupabase(db) {
     await sbIns('semis', batch.map(toSupaV));
 }
 
-// DB inicial: hardcodeada (se reemplaza al cargar desde Supabase en DOMContentLoaded)
-let DB = JSON.parse(JSON.stringify(DB_DEFAULT));
+// ── INIT SÍNCRONA: localStorage como caché rápida ────────────────────────────
+// Los dropdowns NECESITAN datos síncronos al arrancar.
+// Supabase sincroniza el caché en segundo plano; la próxima carga ya es rápida.
+let DB = (() => {
+  try {
+    const cached = localStorage.getItem('vilaDB_supa_cache');
+    if (cached) {
+      const d = JSON.parse(cached);
+      console.log('DB desde caché local:', d.choferes.length, 'choferes');
+      return d;
+    }
+  } catch(e) {}
+  console.log('DB desde datos hardcodeados (sin caché local)');
+  return JSON.parse(JSON.stringify(DB_DEFAULT));
+})();
 
 // ── ESTADO ────────────────────────────────────────────────────────────────────
 let state = { chofer: null, tractor: null, semi: null, semiEnabled: false };
@@ -2445,6 +2480,8 @@ async function applyNewDb() {
 
   try {
     await saveToSupabase(pendingDB);
+    // Guardar también en caché local para la próxima carga síncrona
+    try { localStorage.setItem('vilaDB_supa_cache', JSON.stringify(pendingDB)); } catch(e) {}
     btn.textContent = '✅ Guardado — recargando…';
     showToast('✅ Datos guardados en la nube — recargando…');
     setTimeout(() => location.reload(), 1200);
@@ -2471,6 +2508,7 @@ async function resetToDefaultDb() {
     await supa.from('choferes').delete().gte('id', 0);
     await supa.from('tractores').delete().gte('id', 0);
     await supa.from('semis').delete().gte('id', 0);
+    localStorage.removeItem('vilaDB_supa_cache');
     showToast('🔄 Restaurando datos originales…');
     setTimeout(() => location.reload(), 800);
   } catch(e) {
@@ -2482,36 +2520,10 @@ async function resetToDefaultDb() {
 // Override original switchTab to support admin
 const _origSwitchTab = (typeof switchTab === 'function') ? switchTab : null;
 
-window.addEventListener('DOMContentLoaded', async () => {
-  // Mostrar indicador de carga mientras se conecta a Supabase
-  const loginBtn = document.getElementById('loginBtn');
-  const loginInput = document.getElementById('loginInput');
-  if (loginBtn)  { loginBtn.disabled = true; loginBtn.textContent = 'Conectando…'; }
-  if (loginInput){ loginInput.disabled = true; loginInput.placeholder = 'Cargando datos…'; }
-
-  // Cargar DB desde Supabase
-  const supaData = await loadFromSupabase();
-  if (supaData) {
-    DB = supaData;
-    console.log('DB cargada desde Supabase:', DB.choferes.length, 'choferes,', DB.tractores.length, 'tractores,', DB.semis.length, 'semis');
-  } else {
-    console.log('Supabase vacío o sin conexión — usando datos hardcodeados');
-  }
-
-  // Restaurar login
-  if (loginBtn)  { loginBtn.disabled = false; loginBtn.textContent = 'Ingresar'; }
-  if (loginInput){ loginInput.disabled = false; loginInput.placeholder = 'Contraseña'; }
-
-  // Banner visible que confirma fuente de datos
-  const banner = document.createElement('div');
-  banner.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:#2C3E50;color:#fff;padding:8px 18px;border-radius:20px;font-size:12px;font-weight:700;z-index:9999;pointer-events:none;opacity:0;transition:opacity 0.4s';
-  const usingSupa = supaData && (supaData.choferes.length > 0 || supaData.tractores.length > 0);
-  banner.textContent = usingSupa
-    ? `☁️ Datos de Supabase: ${DB.choferes.length} choferes · ${DB.tractores.length} tractores · ${DB.semis.length} semis`
-    : `📋 Datos locales (Supabase vacío): ${DB.choferes.length} choferes`;
-  document.body.appendChild(banner);
-  setTimeout(() => { banner.style.opacity = '1'; }, 100);
-  setTimeout(() => { banner.style.opacity = '0'; setTimeout(() => banner.remove(), 500); }, 4000);
+window.addEventListener('DOMContentLoaded', () => {
+  // Los dropdowns se inicializan con DB (ya cargada síncronamente desde caché).
+  // Supabase sincroniza el caché en segundo plano sin bloquear la UI.
+  syncFromSupabase();
 
   if (sessionStorage.getItem('vilaAuth') === '1') {
     document.getElementById('loginScreen').style.display = 'none';
