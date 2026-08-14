@@ -1310,22 +1310,26 @@ async function loadFromSupabase() {
 }
 
 // ── Sincronización en 2do plano: Supabase → localStorage ─────────────────────
-// Se llama al arrancar. No bloquea los dropdowns.
-// Si Supabase tiene datos distintos al caché, actualiza y recarga.
+// Lógica simple e infalible:
+//   - Si no había caché local → siempre recarga con los datos de Supabase
+//   - Si ya había caché → no recarga (los datos ya están en pantalla)
 async function syncFromSupabase() {
+  const hadCache = !!localStorage.getItem('vilaDB_supa_cache');
   const data = await loadFromSupabase();
-  if (!data) return; // Sin conexión o Supabase vacío → seguir con caché
-  // Guardar en caché local
+  if (!data) {
+    console.log('Supabase vacío o sin conexión — usando datos locales');
+    updateAdminStatus();
+    return;
+  }
+  // Siempre actualizar el caché con lo que hay en Supabase
   try { localStorage.setItem('vilaDB_supa_cache', JSON.stringify(data)); } catch(e) {}
-  // Si el caché cambió respecto a lo que hay en pantalla → recargar
-  const changed = data.choferes.length !== DB.choferes.length
-               || data.tractores.length !== DB.tractores.length
-               || data.semis.length !== DB.semis.length;
-  if (changed) {
-    console.log('Supabase tiene datos nuevos — recargando…');
+  console.log('Supabase OK:', data.choferes.length, 'choferes ·', data.tractores.length, 'tractores ·', data.semis.length, 'semis');
+  if (!hadCache) {
+    // Primera carga sin caché → recargar para que setupSearch use los datos de Supabase
+    console.log('Sin caché previo — recargando con datos de Supabase…');
     location.reload();
   } else {
-    console.log('Caché sincronizado con Supabase ✅');
+    console.log('Caché ya estaba — dropdowns actualizados ✅');
     updateAdminStatus();
   }
 }
