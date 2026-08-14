@@ -1290,23 +1290,23 @@ function toSupaV(v) {
 
 // Cargar DB desde Supabase (async, llamada desde DOMContentLoaded)
 async function loadFromSupabase() {
-  try {
-    const [r1, r2, r3] = await Promise.all([
-      supa.from('choferes').select('nombre,dni,tel').order('nombre'),
-      supa.from('tractores').select('*').order('patente'),
-      supa.from('semis').select('*').order('patente'),
-    ]);
-    const ch = r1.data || [], tr = r2.data || [], sm = r3.data || [];
-    if (!ch.length && !tr.length && !sm.length) return null; // Supabase vacío
-    return {
-      choferes:  ch.map(r => ({ nombre: r.nombre, dni: r.dni || '', tel: r.tel || '' })),
-      tractores: tr.map(mapVehiculo),
-      semis:     sm.map(mapVehiculo),
-    };
-  } catch(e) {
-    console.warn('Error conectando con Supabase:', e);
-    return null;
-  }
+  const [r1, r2, r3] = await Promise.all([
+    supa.from('choferes').select('nombre,dni,tel').order('nombre'),
+    supa.from('tractores').select('*').order('patente'),
+    supa.from('semis').select('*').order('patente'),
+  ]);
+  // Log errores explícitamente (Supabase no tira excepciones, devuelve {error})
+  if (r1.error) { console.error('Supabase choferes error:', r1.error); }
+  if (r2.error) { console.error('Supabase tractores error:', r2.error); }
+  if (r3.error) { console.error('Supabase semis error:', r3.error); }
+  const ch = r1.data || [], tr = r2.data || [], sm = r3.data || [];
+  console.log('Supabase respuesta:', ch.length, 'choferes,', tr.length, 'tractores,', sm.length, 'semis');
+  if (!ch.length && !tr.length && !sm.length) return null; // Supabase vacío
+  return {
+    choferes:  ch.map(r => ({ nombre: r.nombre, dni: r.dni || '', tel: r.tel || '' })),
+    tractores: tr.map(mapVehiculo),
+    semis:     sm.map(mapVehiculo),
+  };
 }
 
 // Guardar DB completa en Supabase (borrar todo + insertar)
@@ -2501,6 +2501,17 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Restaurar login
   if (loginBtn)  { loginBtn.disabled = false; loginBtn.textContent = 'Ingresar'; }
   if (loginInput){ loginInput.disabled = false; loginInput.placeholder = 'Contraseña'; }
+
+  // Banner visible que confirma fuente de datos
+  const banner = document.createElement('div');
+  banner.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:#2C3E50;color:#fff;padding:8px 18px;border-radius:20px;font-size:12px;font-weight:700;z-index:9999;pointer-events:none;opacity:0;transition:opacity 0.4s';
+  const usingSupa = supaData && (supaData.choferes.length > 0 || supaData.tractores.length > 0);
+  banner.textContent = usingSupa
+    ? `☁️ Datos de Supabase: ${DB.choferes.length} choferes · ${DB.tractores.length} tractores · ${DB.semis.length} semis`
+    : `📋 Datos locales (Supabase vacío): ${DB.choferes.length} choferes`;
+  document.body.appendChild(banner);
+  setTimeout(() => { banner.style.opacity = '1'; }, 100);
+  setTimeout(() => { banner.style.opacity = '0'; setTimeout(() => banner.remove(), 500); }, 4000);
 
   if (sessionStorage.getItem('vilaAuth') === '1') {
     document.getElementById('loginScreen').style.display = 'none';
