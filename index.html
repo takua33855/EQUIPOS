@@ -641,6 +641,120 @@
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
 
+  /* ── PIZARRA ─────────────────────────────────────────────── */
+  .pz-bar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    background: var(--blanco); border-radius: var(--radio);
+    box-shadow: var(--sombra); padding: 10px 12px; margin-bottom: 12px;
+    position: sticky; top: 112px; z-index: 80;
+  }
+  .pz-modo {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 11px; border-radius: 999px; border: none; cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 12px;
+    font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+  }
+  .pz-modo.lectura { background: var(--gris-line); color: var(--gris-med); }
+  .pz-modo.editor  { background: var(--verde); color: #fff; }
+  .pz-count { font-size: 12px; color: var(--gris-med); font-weight: 600; margin-left: auto; }
+  .pz-btn {
+    padding: 5px 10px; border: 1px solid var(--gris-line); background: var(--blanco);
+    border-radius: 7px; cursor: pointer; font-size: 12px; font-weight: 600;
+    color: var(--gris-osc);
+  }
+  .pz-btn:active { background: var(--gris-bg); }
+  .pz-search {
+    flex: 1 1 140px; min-width: 0; padding: 6px 10px; font-size: 13px;
+    border: 1px solid var(--gris-line); border-radius: 7px;
+    font-family: 'Barlow', sans-serif;
+  }
+
+  /* Grupos */
+  .pz-grupo { margin-bottom: 14px; border-radius: var(--radio); overflow: hidden; box-shadow: var(--sombra); }
+  .pz-grupo-hd {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+    color: #fff; font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase;
+  }
+  .pz-grupo-hd .n {
+    margin-left: auto; font-size: 12px; background: rgba(255,255,255,.25);
+    padding: 1px 8px; border-radius: 999px;
+  }
+  .pz-grupo-body { background: var(--blanco); padding: 8px; display: grid; gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .pz-grupo.drop-ok { outline: 3px dashed var(--verde); outline-offset: -3px; }
+
+  /* Tarjeta de enganche */
+  .pz-card {
+    border: 1px solid var(--gris-line); border-radius: 9px; overflow: hidden;
+    background: var(--blanco);
+  }
+  .pz-card-hd {
+    display: flex; align-items: center; gap: 6px; padding: 4px 8px;
+    background: var(--gris-bg); border-bottom: 1px solid var(--gris-line);
+    font-size: 11px; color: var(--gris-med); font-weight: 700;
+  }
+  .pz-grip { cursor: grab; touch-action: none; letter-spacing: -2px; color: #9aa7b4; }
+  .pz-del { margin-left: auto; border: none; background: none; cursor: pointer;
+    color: #b0bac4; font-size: 14px; padding: 0 2px; }
+  .pz-del:hover { color: var(--rojo); }
+
+  .pz-slot {
+    display: flex; align-items: center; gap: 7px; padding: 6px 8px;
+    border-bottom: 1px solid #f0f2f5; touch-action: none; min-height: 38px;
+  }
+  .pz-slot:last-child { border-bottom: none; }
+  .pz-slot .ic { font-size: 14px; width: 17px; text-align: center; flex: none; }
+  .pz-slot .tx { min-width: 0; flex: 1; }
+  .pz-slot .t1 { font-size: 13px; font-weight: 600; color: var(--negro);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pz-slot .t2 { font-size: 10.5px; color: var(--gris-med);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pz-slot.vacio .t1 { color: #b0bac4; font-weight: 500; font-style: italic; }
+  .pz-slot.drop-ok { background: var(--verde-light); box-shadow: inset 0 0 0 2px var(--verde); }
+  body.pz-editor .pz-slot:not(.vacio) { cursor: grab; }
+
+  /* Semáforo */
+  .pz-sem { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .pz-sem.ok   { background: #1a7a4a; }
+  .pz-sem.warn { background: #e0a800; }
+  .pz-sem.bad  { background: #c0392B; }
+  .pz-sem.na   { background: #d3d9e0; }
+
+  /* Panel Disponibles */
+  .pz-pool { background: var(--blanco); border-radius: var(--radio);
+    box-shadow: var(--sombra); margin-bottom: 14px; overflow: hidden; }
+  .pz-pool-hd { display: flex; align-items: center; gap: 8px; cursor: pointer;
+    padding: 9px 12px; background: var(--gris-osc); color: #fff;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 14px;
+    font-weight: 800; letter-spacing: .6px; text-transform: uppercase; }
+  .pz-pool-body { padding: 10px 12px; }
+  .pz-pool-body.oculto { display: none; }
+  .pz-pool-sec { margin-bottom: 10px; }
+  .pz-pool-sec:last-child { margin-bottom: 0; }
+  .pz-pool-sec h4 { font-size: 11px; color: var(--gris-med); text-transform: uppercase;
+    letter-spacing: .5px; margin-bottom: 5px; }
+  .pz-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .pz-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--gris-bg); border: 1px solid var(--gris-line);
+    border-radius: 999px; padding: 3px 9px; font-size: 11.5px; font-weight: 600;
+    touch-action: none;
+  }
+  body.pz-editor .pz-chip { cursor: grab; }
+  .pz-pool.drop-ok { outline: 3px dashed var(--rojo); outline-offset: -3px; }
+  .pz-vacio { font-size: 12px; color: #b0bac4; font-style: italic; }
+
+  /* Fantasma de arrastre */
+  #pzGhost {
+    position: fixed; z-index: 999; pointer-events: none; opacity: .93;
+    background: var(--blanco); border: 2px solid var(--rojo); border-radius: 8px;
+    padding: 5px 10px; font-size: 12.5px; font-weight: 700;
+    box-shadow: 0 8px 24px rgba(0,0,0,.28); max-width: 220px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  body.pz-dragging { user-select: none; -webkit-user-select: none; }
+
   /* ── SERENISIMA ──────────────────────────────────────────── */
   .ser-card {
     background: var(--blanco);
@@ -889,6 +1003,9 @@
   <button class="tab-btn" onclick="switchTab('ser')" id="tabSer">
     🥛 La Serenísima
   </button>
+  <button class="tab-btn" onclick="switchTab('piz')" id="tabPiz">
+    📌 Pizarra
+  </button>
   <button class="tab-btn" onclick="switchTab('adm')" id="tabAdm">
     ⚙️ Admin
   </button>
@@ -1128,6 +1245,32 @@
 
 </div><!-- /content ser -->
 </div><!-- /panelSer -->
+
+<!-- TAB: PIZARRA -->
+<div class="tab-panel" id="panelPiz">
+<div class="content">
+
+  <div class="pz-bar">
+    <button class="pz-modo lectura" id="pzModoBtn" onclick="pzToggleModo()">👁 Solo lectura</button>
+    <input class="pz-search" id="pzBuscar" placeholder="Buscar chofer o patente…" oninput="pzRender()">
+    <button class="pz-btn" onclick="pzCargar(true)">↻</button>
+    <button class="pz-btn" id="pzAddBtn" onclick="pzNuevoEnganche()" style="display:none">+ Enganche</button>
+    <span class="pz-count" id="pzCount"></span>
+  </div>
+
+  <div class="pz-pool" id="pzPool">
+    <div class="pz-pool-hd" onclick="pzTogglePool()">
+      <span id="pzPoolCaret">▾</span> Disponibles
+      <span class="n" id="pzPoolCount" style="margin-left:auto;font-size:12px;
+        background:rgba(255,255,255,.2);padding:1px 8px;border-radius:999px"></span>
+    </div>
+    <div class="pz-pool-body" id="pzPoolBody"></div>
+  </div>
+
+  <div id="pzGrupos"></div>
+
+</div>
+</div><!-- /panelPiz -->
 
 <!-- TAB: ADMIN -->
 <div class="tab-panel" id="panelAdm">
@@ -2094,6 +2237,8 @@ function switchTab(tab) {
   document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
   document.getElementById('panel' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
   window.scrollTo(0,0);
+  // La pizarra se carga la primera vez que se entra, no al arrancar la app.
+  if (tab === 'piz' && !PZ.cargado) pzCargar();
 }
 
 // ── SERENÍSIMA ────────────────────────────────────────────────────────────────
@@ -3563,6 +3708,452 @@ async function generarImagenSer() {
   capturedImg = canvas.toDataURL('image/png');
   document.getElementById('modalImg').src = capturedImg;
   document.getElementById('imgModal').classList.add('open');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  PIZARRA DE EQUIPOS
+//  Grupo = texto libre en cada fila de enganche (no hay tabla de grupos).
+//  Disponibles = universo de choferes/unidades menos lo asignado. Nunca a mano.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const PZ = {
+  enganches: [], choferes: [], tractores: [], semis: [],
+  editor: false, cargado: false, poolAbierto: true,
+};
+
+// Patente normalizada: mismo criterio que el importador del panel Admin.
+const pzNP  = p => String(p || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+// Nombre de grupo normalizado, para el mapa de colores.
+const pzNG  = g => String(g || '').toUpperCase()
+  .replace(/[ÁÀÄÂ]/g,'A').replace(/[ÉÈËÊ]/g,'E').replace(/[ÍÌÏÎ]/g,'I')
+  .replace(/[ÓÒÖÔ]/g,'O').replace(/[ÚÙÜÛ]/g,'U').replace(/Ñ/g,'N')
+  .replace(/[^A-Z0-9]/g, '');
+
+// Mapa fijo de colores por grupo conocido.
+const PZ_COLORES = {
+  LINEAS:            '#1a7a4a',  // verde
+  COCACOLA:          '#C0392B',  // rojo
+  ANONIMA:           '#1A5276',  // azul
+  SERENISIMAREPARTO: '#27865f',  // verde secundario
+  SERENISIMA:        '#27865f',
+  FURGON:            '#6c3483',  // violeta
+  BARANDASIDER:      '#d35400',  // naranja
+  PARAGUAY:          '#566573',  // gris
+  PARTICULARES:      '#b7950b',  // amarillo
+  BATEA:             '#7b4b2a',  // marrón
+  PALADINI:          '#117a8b',  // turquesa
+  AUXILIOSERENISIMA: '#b03a6e',  // rosa
+};
+// Paleta de reserva: cualquier grupo nuevo recibe color por hash del nombre.
+const PZ_RESERVA = ['#2e5e8c','#8c5a2e','#4a7c59','#8c2e5e','#5e2e8c','#2e8c8c',
+                    '#8c8c2e','#6b4c9a','#94553d','#3d7a94','#7a3d94','#94773d'];
+
+function pzColor(grupo) {
+  const k = pzNG(grupo);
+  if (PZ_COLORES[k]) return PZ_COLORES[k];
+  let h = 0;
+  for (let i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0;
+  return PZ_RESERVA[h % PZ_RESERVA.length];
+}
+
+// ── Semáforo de documentación ──────────────────────────────────────────────
+// Toma la peor entre póliza y SENASA. dateClass() ya maneja "No corresponde".
+function pzSemaforo(u) {
+  if (!u) return 'na';
+  const est = [dateClass(u.vto_poliza), dateClass(u.vto_senasa)];
+  if (est.includes('vencido')) return 'bad';
+  if (est.includes('proximo')) return 'warn';
+  if (est.includes('vigente')) return 'ok';
+  return 'na';
+}
+
+// ── Carga desde Supabase ───────────────────────────────────────────────────
+async function pzCargar(avisar) {
+  const cont = document.getElementById('pzGrupos');
+  if (!PZ.cargado) cont.innerHTML = '<p style="padding:20px;color:#8899aa">Cargando pizarra…</p>';
+  const [e, c, t, s] = await Promise.all([
+    supa.from('enganches').select('*').order('grupo').order('orden'),
+    supa.from('choferes').select('id,nombre,dni,tel').order('nombre'),
+    supa.from('tractores').select('*').order('patente'),
+    supa.from('semis').select('*').order('patente'),
+  ]);
+  if (e.error) {
+    console.error('Pizarra · enganches:', JSON.stringify(e.error));
+    cont.innerHTML = '<p style="padding:20px;color:#C0392B">No se pudo leer la tabla '
+      + '<b>enganches</b>. ¿Corriste <code>sql/01_enganches.sql</code> en Supabase?<br>'
+      + '<span style="font-size:12px;color:#566573">' + (e.error.message || '') + '</span></p>';
+    return;
+  }
+  if (c.error || t.error || s.error) { showToast('⚠️ Error leyendo maestros'); return; }
+  PZ.enganches = e.data || [];
+  PZ.choferes  = c.data || [];
+  PZ.tractores = t.data || [];
+  PZ.semis     = s.data || [];
+  PZ.cargado   = true;
+  pzRender();
+  if (avisar) showToast('↻ Pizarra actualizada');
+}
+
+// ── Índices auxiliares ─────────────────────────────────────────────────────
+function pzIdx() {
+  const ch = {}, tr = {}, se = {}, trP = {}, seP = {};
+  PZ.choferes.forEach(x => ch[x.id] = x);
+  PZ.tractores.forEach(x => { tr[x.id] = x; trP[pzNP(x.patente)] = x; });
+  PZ.semis.forEach(x => { se[x.id] = x; seP[pzNP(x.patente)] = x; });
+  return { ch, tr, se, trP, seP };
+}
+
+// Busca la ficha de un equipo de frío por patente (puede no existir todavía).
+function pzFrio(pat, ix) {
+  const k = pzNP(pat);
+  return ix.trP[k] || ix.seP[k] || null;
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function pzRender() {
+  const ix   = pzIdx();
+  const q    = (document.getElementById('pzBuscar').value || '').trim().toUpperCase();
+  const cont = document.getElementById('pzGrupos');
+
+  const coincide = e => {
+    if (!q) return true;
+    const c = ix.ch[e.chofer_id], t = ix.tr[e.tractor_id], s = ix.se[e.semi_id];
+    return [c && c.nombre, t && t.patente, s && s.patente, e.frio_patente, e.grupo, e.nota]
+      .some(v => v && String(v).toUpperCase().includes(q));
+  };
+
+  // Agrupar. El orden de los grupos sale del orden mínimo de sus enganches,
+  // así la pizarra respeta cómo venían cargados y no salta al renombrar.
+  const grupos = {};
+  PZ.enganches.forEach(e => {
+    const g = e.grupo || 'SIN GRUPO';
+    (grupos[g] = grupos[g] || []).push(e);
+  });
+  const nombres = Object.keys(grupos).sort((a, b) => {
+    const ma = Math.min(...grupos[a].map(x => x.orden ?? 0));
+    const mb = Math.min(...grupos[b].map(x => x.orden ?? 0));
+    return ma - mb || a.localeCompare(b, 'es');
+  });
+
+  let html = '', visibles = 0, gruposVisibles = 0;
+  nombres.forEach(g => {
+    const lista = grupos[g].filter(coincide).sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
+    if (!lista.length) return;
+    visibles += lista.length;
+    gruposVisibles++;
+    const col = pzColor(g);
+    html += `<div class="pz-grupo" data-grupo="${pzEsc(g)}">
+      <div class="pz-grupo-hd" style="background:${col}">
+        <span>${pzEsc(g)}</span><span class="n">${lista.length}</span>
+      </div>
+      <div class="pz-grupo-body">${lista.map(e => pzCard(e, ix)).join('')}</div>
+    </div>`;
+  });
+
+  cont.innerHTML = html || '<p style="padding:20px;color:#8899aa">'
+    + (PZ.enganches.length ? 'Ningún enganche coincide con la búsqueda.'
+                           : 'No hay enganches cargados todavía.') + '</p>';
+  // El conteo de grupos sigue al filtro, no al total: con una búsqueda activa
+  // mostrar "11 grupos" mientras se ve uno solo es engañoso.
+  document.getElementById('pzCount').textContent =
+    visibles + ' de ' + PZ.enganches.length + ' enganches · '
+    + gruposVisibles + (gruposVisibles === 1 ? ' grupo' : ' grupos');
+  pzRenderPool(ix);
+}
+
+const pzEsc = s => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function pzSlot(engId, kind, ic, t1, t2, sem, vacio) {
+  return `<div class="pz-slot${vacio ? ' vacio' : ''}" data-eng="${engId}" data-kind="${kind}">
+    <span class="ic">${ic}</span>
+    <span class="tx"><div class="t1">${pzEsc(t1)}</div>${t2 ? `<div class="t2">${pzEsc(t2)}</div>` : ''}</span>
+    ${sem ? `<span class="pz-sem ${sem}" title="Documentación"></span>` : ''}
+  </div>`;
+}
+
+function pzCard(e, ix) {
+  const c = ix.ch[e.chofer_id], t = ix.tr[e.tractor_id], s = ix.se[e.semi_id];
+  const f = e.frio_patente ? pzFrio(e.frio_patente, ix) : null;
+  const desc = u => u ? [u.marca, u.modelo].filter(Boolean).join(' ').slice(0, 42) : '';
+  return `<div class="pz-card" data-eng="${e.id}">
+    <div class="pz-card-hd">
+      <span class="pz-grip" data-eng="${e.id}" data-kind="enganche" title="Arrastrar a otro grupo">⠿</span>
+      <span>#${e.orden ?? 0}</span>
+      ${e.nota ? `<span style="color:#b7950b" title="Nota">✎ ${pzEsc(e.nota)}</span>` : ''}
+      <button class="pz-del" onclick="pzBorrar(${e.id})" title="Quitar enganche">✕</button>
+    </div>
+    ${pzSlot(e.id, 'chofer',  '👤', c ? c.nombre : 'Sin chofer', c ? (c.tel || c.dni || '') : '', null, !c)}
+    ${pzSlot(e.id, 'tractor', '🚛', t ? t.patente : '—', desc(t), pzSemaforo(t), !t)}
+    ${pzSlot(e.id, 'semi',    '🚚', s ? s.patente : 'Sin semi', desc(s), s ? pzSemaforo(s) : null, !s)}
+    ${pzSlot(e.id, 'frio',    '❄️', e.frio_patente || 'Sin equipo de frío',
+             f ? desc(f) : (e.frio_patente ? 'sin ficha cargada' : ''),
+             f ? pzSemaforo(f) : (e.frio_patente ? 'na' : null), !e.frio_patente)}
+  </div>`;
+}
+
+// ── Panel Disponibles (calculado, nunca a mano) ────────────────────────────
+function pzDisponibles() {
+  const usadoC = new Set(PZ.enganches.map(e => e.chofer_id).filter(Boolean));
+  const usadoT = new Set(PZ.enganches.map(e => e.tractor_id).filter(Boolean));
+  const usadoS = new Set(PZ.enganches.map(e => e.semi_id).filter(Boolean));
+  const usadoF = new Set(PZ.enganches.map(e => pzNP(e.frio_patente)).filter(Boolean));
+  const esFrio = u => /FRIO/.test(String(u.tipo || '').toUpperCase())
+                   || /^FRIO/.test(String(u.patente || '').toUpperCase());
+  return {
+    choferes:  PZ.choferes.filter(x => !usadoC.has(x.id)),
+    tractores: PZ.tractores.filter(x => !usadoT.has(x.id) && !esFrio(x)),
+    semis:     PZ.semis.filter(x => !usadoS.has(x.id)),
+    frios:     PZ.tractores.concat(PZ.semis)
+                 .filter(x => esFrio(x) && !usadoF.has(pzNP(x.patente))),
+  };
+}
+
+function pzRenderPool(ix) {
+  const d = pzDisponibles();
+  const sec = (titulo, items, kind, etiq, ref) => {
+    if (!items.length) return `<div class="pz-pool-sec"><h4>${titulo} (0)</h4>
+      <span class="pz-vacio">Nada disponible.</span></div>`;
+    return `<div class="pz-pool-sec"><h4>${titulo} (${items.length})</h4><div class="pz-chips">`
+      + items.map(x => `<span class="pz-chip" data-pool="${kind}" data-ref="${pzEsc(ref(x))}">`
+          + `${etiq(x)}</span>`).join('') + `</div></div>`;
+  };
+  const semU = x => `<span class="pz-sem ${pzSemaforo(x)}"></span>${pzEsc(x.patente)}`;
+  document.getElementById('pzPoolBody').innerHTML =
+      sec('Choferes',  d.choferes,  'chofer',  x => pzEsc(x.nombre), x => x.id)
+    + sec('Tractores', d.tractores, 'tractor', semU, x => x.id)
+    + sec('Semis',     d.semis,     'semi',    semU, x => x.id)
+    + sec('Equipos de frío', d.frios, 'frio',  semU, x => x.patente);
+  document.getElementById('pzPoolCount').textContent =
+    (d.choferes.length + d.tractores.length + d.semis.length + d.frios.length) + ' libres';
+}
+
+function pzTogglePool() {
+  PZ.poolAbierto = !PZ.poolAbierto;
+  document.getElementById('pzPoolBody').classList.toggle('oculto', !PZ.poolAbierto);
+  document.getElementById('pzPoolCaret').textContent = PZ.poolAbierto ? '▾' : '▸';
+}
+
+// ── Rol editor / solo lectura ──────────────────────────────────────────────
+function pzToggleModo() {
+  if (PZ.editor) {
+    PZ.editor = false;
+  } else {
+    const p = prompt('Contraseña de editor:');
+    if (p === null) return;
+    if (p !== ADMIN_PASS) { showToast('⚠️ Contraseña incorrecta'); return; }
+    PZ.editor = true;
+  }
+  const b = document.getElementById('pzModoBtn');
+  b.className = 'pz-modo ' + (PZ.editor ? 'editor' : 'lectura');
+  b.textContent = PZ.editor ? '✏️ Editor' : '👁 Solo lectura';
+  document.body.classList.toggle('pz-editor', PZ.editor);
+  document.getElementById('pzAddBtn').style.display = PZ.editor ? '' : 'none';
+  showToast(PZ.editor ? '✏️ Modo editor' : '👁 Solo lectura');
+}
+
+// ── Persistencia ───────────────────────────────────────────────────────────
+// Optimista: aplica local, renderiza, guarda. Si falla, recarga desde la base.
+async function pzGuardar(cambios) {
+  for (const c of cambios) {
+    const { error } = await supa.from('enganches').update(c.campos).eq('id', c.id);
+    if (error) {
+      console.error('Pizarra · guardar:', JSON.stringify(error));
+      showToast('⚠️ No se pudo guardar: ' + (error.message || 'error'));
+      await pzCargar();
+      return false;
+    }
+  }
+  return true;
+}
+
+const pzGet = id => PZ.enganches.find(e => e.id === id);
+
+// ── Drag & drop (Pointer Events: funciona con mouse y con dedo) ────────────
+let pzDrag = null;
+
+function pzOrigen(el) {
+  const slot = el.closest('.pz-slot[data-kind]');
+  if (slot) {
+    const e = pzGet(+slot.dataset.eng);
+    const k = slot.dataset.kind;
+    const campo = k === 'frio' ? 'frio_patente' : k + '_id';
+    if (!e || !e[campo]) return null;              // vacío: no hay nada que arrastrar
+    return { tipo: 'slot', kind: k, engId: e.id, valor: e[campo], el: slot };
+  }
+  const grip = el.closest('.pz-grip[data-kind="enganche"]');
+  if (grip) return { tipo: 'enganche', kind: 'enganche', engId: +grip.dataset.eng,
+                     el: grip.closest('.pz-card') };
+  const chip = el.closest('.pz-chip[data-pool]');
+  if (chip) return { tipo: 'pool', kind: chip.dataset.pool,
+                     valor: chip.dataset.pool === 'frio' ? chip.dataset.ref : +chip.dataset.ref,
+                     el: chip };
+  return null;
+}
+
+function pzEtiqueta(o) {
+  if (o.tipo === 'enganche') return 'Enganche #' + o.engId;
+  return o.el.textContent.trim().slice(0, 30) || o.kind;
+}
+
+document.addEventListener('pointerdown', ev => {
+  if (!PZ.editor) return;
+  if (!ev.target.closest('#panelPiz')) return;
+  if (ev.target.closest('.pz-del, .pz-btn, .pz-modo, .pz-search, .pz-pool-hd')) return;
+  const o = pzOrigen(ev.target);
+  if (!o) return;
+  pzDrag = { o, x0: ev.clientX, y0: ev.clientY, activo: false, ghost: null, target: null };
+});
+
+document.addEventListener('pointermove', ev => {
+  if (!pzDrag) return;
+  if (!pzDrag.activo) {
+    if (Math.hypot(ev.clientX - pzDrag.x0, ev.clientY - pzDrag.y0) < 8) return;
+    pzDrag.activo = true;
+    document.body.classList.add('pz-dragging');
+    const g = document.createElement('div');
+    g.id = 'pzGhost';
+    g.textContent = pzEtiqueta(pzDrag.o);
+    document.body.appendChild(g);
+    pzDrag.ghost = g;
+  }
+  ev.preventDefault();
+  pzDrag.ghost.style.left = (ev.clientX + 12) + 'px';
+  pzDrag.ghost.style.top  = (ev.clientY - 14) + 'px';
+
+  if (pzDrag.target) pzDrag.target.classList.remove('drop-ok');
+  pzDrag.target = null;
+  pzDrag.ghost.style.display = 'none';
+  const bajo = document.elementFromPoint(ev.clientX, ev.clientY);
+  pzDrag.ghost.style.display = '';
+  if (!bajo) return;
+
+  let t = null;
+  if (pzDrag.o.tipo === 'enganche') {
+    t = bajo.closest('.pz-grupo');
+  } else {
+    const slot = bajo.closest(`.pz-slot[data-kind="${pzDrag.o.kind}"]`);
+    if (slot && +slot.dataset.eng !== pzDrag.o.engId) t = slot;
+    else if (pzDrag.o.tipo === 'slot') t = bajo.closest('.pz-pool');
+  }
+  if (t) { t.classList.add('drop-ok'); pzDrag.target = t; }
+}, { passive: false });
+
+document.addEventListener('pointerup', async () => {
+  if (!pzDrag) return;
+  const { o, target, ghost, activo } = pzDrag;
+  pzDrag = null;
+  if (ghost) ghost.remove();
+  document.body.classList.remove('pz-dragging');
+  if (target) target.classList.remove('drop-ok');
+  if (!activo || !target) return;
+  await pzSoltar(o, target);
+});
+
+document.addEventListener('pointercancel', () => {
+  if (pzDrag && pzDrag.ghost) pzDrag.ghost.remove();
+  document.body.classList.remove('pz-dragging');
+  pzDrag = null;
+});
+
+async function pzSoltar(o, target) {
+  const campo = o.kind === 'frio' ? 'frio_patente' : o.kind + '_id';
+
+  // 1. Mover un enganche completo a otro grupo.
+  if (o.tipo === 'enganche') {
+    const g = target.dataset.grupo;
+    const e = pzGet(o.engId);
+    if (!e || e.grupo === g) return;
+    const max = Math.max(0, ...PZ.enganches.filter(x => x.grupo === g).map(x => x.orden ?? 0));
+    const prev = { grupo: e.grupo, orden: e.orden };
+    e.grupo = g; e.orden = max + 1;
+    pzRender();
+    if (!await pzGuardar([{ id: e.id, campos: { grupo: g, orden: max + 1 } }])) return;
+    showToast('→ Movido a ' + g);
+    return;
+  }
+
+  // 2. Soltar en Disponibles: liberar el recurso.
+  if (target.classList.contains('pz-pool')) {
+    if (o.kind === 'tractor') { showToast('⚠️ El tractor no se puede quitar: es obligatorio'); return; }
+    const e = pzGet(o.engId);
+    if (!e) return;
+    e[campo] = null;
+    pzRender();
+    if (!await pzGuardar([{ id: e.id, campos: { [campo]: null } }])) return;
+    showToast('↓ Liberado');
+    return;
+  }
+
+  // 3. Soltar sobre otro slot del mismo tipo.
+  const destino = pzGet(+target.dataset.eng);
+  if (!destino) return;
+
+  // 3a. Desde Disponibles: asignar (lo que estaba ahí vuelve a quedar libre).
+  if (o.tipo === 'pool') {
+    destino[campo] = o.valor;
+    pzRender();
+    if (!await pzGuardar([{ id: destino.id, campos: { [campo]: o.valor } }])) return;
+    showToast('✓ Asignado');
+    return;
+  }
+
+  // 3b. Entre dos enganches: intercambio.
+  const origen = pzGet(o.engId);
+  if (!origen) return;
+  if (o.kind === 'tractor' && !destino[campo]) {
+    showToast('⚠️ El destino quedaría sin tractor'); return;
+  }
+  const a = origen[campo], b = destino[campo];
+  origen[campo] = b; destino[campo] = a;
+  pzRender();
+  // Paso intermedio en NULL: los índices únicos parciales rechazan el estado
+  // transitorio en que dos enganches comparten el mismo recurso.
+  const ok = await pzGuardar([
+    { id: origen.id,  campos: { [campo]: null } },
+    { id: destino.id, campos: { [campo]: a } },
+    { id: origen.id,  campos: { [campo]: b } },
+  ]);
+  if (ok) showToast('⇄ Intercambiado');
+}
+
+// ── Alta y baja de enganches ───────────────────────────────────────────────
+async function pzNuevoEnganche() {
+  if (!PZ.editor) return;
+  const libres = pzDisponibles().tractores;
+  if (!libres.length) { showToast('⚠️ No hay tractores disponibles'); return; }
+  const grupos = [...new Set(PZ.enganches.map(e => e.grupo))].sort();
+  const g = prompt('Grupo del nuevo enganche:\n\nExistentes: ' + grupos.join(', ')
+    + '\n\n(Escribí uno nuevo y el grupo se crea solo.)', grupos[0] || 'SIN GRUPO');
+  if (g === null || !g.trim()) return;
+  const grupo = g.trim();
+  const max = Math.max(0, ...PZ.enganches.filter(x => x.grupo === grupo).map(x => x.orden ?? 0));
+  const { data, error } = await supa.from('enganches')
+    .insert({ grupo, tractor_id: libres[0].id, orden: max + 1 }).select();
+  if (error) {
+    console.error('Pizarra · alta:', JSON.stringify(error));
+    showToast('⚠️ No se pudo crear: ' + (error.message || '')); return;
+  }
+  PZ.enganches.push(data[0]);
+  pzRender();
+  showToast('+ Enganche en ' + grupo + ' (' + libres[0].patente + ')');
+}
+
+async function pzBorrar(id) {
+  if (!PZ.editor) { showToast('👁 Estás en solo lectura'); return; }
+  const e = pzGet(id);
+  if (!e) return;
+  const ix = pzIdx(), t = ix.tr[e.tractor_id];
+  if (!confirm('¿Quitar el enganche de ' + e.grupo + ' (' + (t ? t.patente : '?') + ')?\n\n'
+    + 'Chofer y unidades vuelven a Disponibles.')) return;
+  const { error } = await supa.from('enganches').delete().eq('id', id);
+  if (error) {
+    console.error('Pizarra · baja:', JSON.stringify(error));
+    showToast('⚠️ No se pudo quitar: ' + (error.message || '')); return;
+  }
+  PZ.enganches = PZ.enganches.filter(x => x.id !== id);
+  pzRender();
+  showToast('🗑 Enganche quitado');
 }
 
 </script>
