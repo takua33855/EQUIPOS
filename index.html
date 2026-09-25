@@ -1211,8 +1211,8 @@
       <div class="card-body">
         <div class="preview-wrap" id="previewWrap"></div>
 
-        <button class="btn-admin-apply" id="btnApplyDb" onclick="applyNewDb()">
-          ⬆️ Aplicar y Guardar Base de Datos
+        <button class="btn-admin-apply" id="btnApplyDb" onclick="applyNewDb()" disabled>
+          ⏳ Calculando informe…
         </button>
         <button class="btn-admin-reset" onclick="cancelPreview()">
           ✕ Cancelar
@@ -1366,6 +1366,342 @@ async function saveToSupabase(db) {
     await sbIns('tractores', batch.map(toSupaV));
   for (const batch of chunk(db.semis, 500))
     await sbIns('semis', batch.map(toSupaV));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  SINCRONIZACIÓN POR MERGE (reemplaza el borrar-todo-e-insertar)
+//
+//  El Excel NO es autoritativo para todo. Medido sobre la base real:
+//    · vto_poliza : Supabase tenía la fecha posterior en 104 de 104 unidades
+//    · vto_senasa : el Excel tenía la posterior en 7 de 7
+//    · seguro     : el Excel venía vacío en 28 filas que en Supabase tenían dato
+//    · tipo       : el Excel es más específico (SEMIRREMOLQUE → FURGON/SIDER)
+//  O sea que ninguna fuente gana siempre, y un upsert ciego en cualquier
+//  dirección pierde datos. De ahí una regla por columna, no una global.
+//
+//  Además: los ids no se regeneran, así que los FK de enganches sobreviven.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const MG_NP = p => String(p || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+// Nombre normalizado: "Acosta, Sebastian" y "Acosta Sebastian" son el mismo.
+const mgNorm = s => String(s || '').toUpperCase()
+  .replace(/[^A-ZÁÉÍÓÚÑ ]/g, '').replace(/\s+/g, ' ').trim();
+// Clave natural de una fila, la que decide si ya existe.
+const mgClave = (tb, r) => {
+  if (tb !== 'choferes') return MG_NP(r.patente);
+  const d = String(r.dni || '').replace(/\D/g, '');
+  return d ? 'dni:' + d : 'nom:' + mgNorm(r.nombre);
+};
+// Un campo "sin dato": ni vacío ni el relleno que usa el importador.
+const mgVacio = v => { const s = String(v == null ? '' : v).trim();
+  return s === '' || s === 'No corresponde' || s === 'NO'; };
+
+// Fecha DD/MM/YYYY → Date. Devuelve null si no parsea.
+function mgFecha(s) {
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(s || '').trim());
+  if (!m) return null;
+  const d = new Date(+m[3], +m[2] - 1, +m[1]);
+  return isNaN(d) ? null : d;
+}
+
+// Campos de ficha técnica: el Excel manda, pero nunca pisa con vacío.
+const MG_FICHA = ['tipo', 'marca', 'modelo', 'anio', 'chasis', 'seguro'];
+// Vencimientos y el dato que viaja con cada uno.
+const MG_VTOS  = [['vto_poliza', 'poliza'], ['vto_senasa', 'senasa_nro']];
+
+// Calcula qué cambiaría en UNA unidad. No escribe nada: devuelve el parche y
+// el detalle, para que el informe pueda mostrarlo antes de aplicar.
+function mgMergeUnidad(excel, actual) {
+  const parche = {}, detalle = [];
+
+  for (const c of MG_FICHA) {
+    const x = excel[c], y = actual[c];
+    if (mgVacio(x)) {
+      if (!mgVacio(y)) detalle.push({ campo: c, accion: 'conserva', valor: y,
+        motivo: 'el Excel no trae dato' });
+      continue;                                  // nunca vaciar
+    }
+    if (String(x).trim() !== String(y == null ? '' : y).trim()) {
+      parche[c] = String(x).trim();
+      detalle.push({ campo: c, accion: 'actualiza', de: y, a: String(x).trim() });
+    }
+  }
+
+  // Vencimientos: gana la fecha posterior, venga de donde venga. Una renovación
+  // siempre empuja el vencimiento hacia adelante, nunca hacia atrás.
+  for (const [vto, nro] of MG_VTOS) {
+    const fx = mgFecha(excel[vto]), fy = mgFecha(actual[vto]);
+    if (fx && fy) {
+      if (fx > fy) {
+        parche[vto] = String(excel[vto]).trim();
+        detalle.push({ campo: vto, accion: 'actualiza', de: actual[vto], a: excel[vto],
+          motivo: 'el Excel tiene el vencimiento posterior' });
+        // El número viaja con su fecha: si no, quedaría la póliza vieja
+        // rotulada con el vencimiento nuevo.
+        if (!mgVacio(excel[nro]) && String(excel[nro]).trim() !== String(actual[nro] || '').trim()) {
+          parche[nro] = String(excel[nro]).trim();
+          detalle.push({ campo: nro, accion: 'actualiza', de: actual[nro], a: excel[nro],
+            motivo: 'acompaña a ' + vto });
+        }
+      } else if (fx < fy) {
+        detalle.push({ campo: vto, accion: 'conserva', valor: actual[vto],
+          motivo: 'Supabase tiene el vencimiento posterior' });
+        detalle.push({ campo: nro, accion: 'conserva', valor: actual[nro],
+          motivo: 'acompaña a ' + vto });
+      }
+    } else if (fx && !fy) {
+      parche[vto] = String(excel[vto]).trim();
+      detalle.push({ campo: vto, accion: 'actualiza', de: actual[vto], a: excel[vto],
+        motivo: 'Supabase no tenía fecha' });
+      if (!mgVacio(excel[nro])) parche[nro] = String(excel[nro]).trim();
+    } else if (!fx && fy) {
+      detalle.push({ campo: vto, accion: 'conserva', valor: actual[vto],
+        motivo: 'el Excel no trae fecha' });
+    }
+  }
+  return { parche, detalle };
+}
+
+// Recorre el Excel contra lo que hay en Supabase y arma el plan completo.
+// No escribe nada.
+async function mgPlan(db) {
+  const [c, t, s] = await Promise.all([
+    supa.from('choferes').select('*'),
+    supa.from('tractores').select('*'),
+    supa.from('semis').select('*'),
+  ]);
+  if (c.error || t.error || s.error)
+    throw new Error('No se pudo leer el estado actual: '
+      + ((c.error || t.error || s.error).message));
+
+  const plan = {
+    tablas: {},
+    ausentes: [],          // están en Supabase y no en el Excel
+    cruces: [],            // el tipo del Excel los pondría en la otra tabla
+    ambiguos: [],          // choferes que no se pueden identificar sin dudas
+    duplicados: [],        // la misma patente existe en tractores Y en semis
+  };
+
+  // ── Unidades ────────────────────────────────────────────────────────────
+  const porTabla = { tractores: t.data || [], semis: s.data || [] };
+  const idx = {};
+  // Patentes que aparecen en las dos tablas: no se puede saber a cuál de las
+  // dos filas corresponde la del Excel, así que no se toca ninguna. Sin esta
+  // validación la segunda tabla recorrida pisaba a la primera en el mapa, y
+  // la fila tapada quedaba además clasificada como "ausente".
+  const conflictivas = new Set();
+  for (const tb of ['tractores', 'semis']) {
+    for (const r of porTabla[tb]) {
+      const k = MG_NP(r.patente);
+      if (!k) continue;
+      const previo = idx[k];
+      if (previo) {
+        conflictivas.add(k);
+        plan.duplicados.push({
+          patente: r.patente,
+          en: [{ tabla: previo.tabla, id: previo.fila.id, tipo: previo.fila.tipo },
+               { tabla: tb,           id: r.id,           tipo: r.tipo }],
+        });
+        continue;                                // se conserva el primero, pero
+      }                                          // la clave queda bloqueada
+      idx[k] = { fila: r, tabla: tb };
+    }
+  }
+
+  // Presencia en el Excel: se mide sobre las DOS hojas juntas, no por tabla.
+  // El importador reparte por isSemi(), así que una unidad que cambia de
+  // categoría llega en la hoja contraria a la tabla donde está guardada; si el
+  // chequeo fuera por tabla, se la reportaría como ausente además de como cruce.
+  const enExcelGlobal = new Set(
+    [...(db.tractores || []), ...(db.semis || [])].map(v => MG_NP(v.patente)).filter(Boolean));
+
+  for (const tb of ['tractores', 'semis']) {
+    const filas = db[tb] || [];
+    const nuevos = [], updates = [], vistos = [];
+    for (const v of filas) {
+      const k = MG_NP(v.patente);
+      if (!k) continue;
+      // Patente presente en las dos tablas: ya está reportada como duplicada.
+      // No se actualiza ni se inserta nada hasta que alguien decida cuál vale.
+      if (conflictivas.has(k)) continue;
+      const excel = toSupaV(v);
+      const enc = idx[k];
+      if (!enc) { nuevos.push(excel); continue; }
+      vistos.push(enc.fila.id);
+
+      // El tipo del Excel lo mandaría a la otra tabla: se reporta, no se mueve.
+      // Mover cambiaría el id y rompería los FK de enganches.
+      const deberia = isSemi(excel.tipo) ? 'semis' : 'tractores';
+      if (!mgVacio(excel.tipo) && deberia !== enc.tabla)
+        plan.cruces.push({ patente: enc.fila.patente, id: enc.fila.id,
+          tipoActual: enc.fila.tipo, tipoExcel: excel.tipo,
+          de: enc.tabla, a: deberia });
+
+      const { parche, detalle } = mgMergeUnidad(excel, enc.fila);
+      // OJO: la fila puede vivir en la OTRA tabla (caso cruce: el Excel la
+      // trae en la hoja de semis pero está guardada en tractores). El update
+      // tiene que ir a la tabla real, no a la del lote que se está recorriendo,
+      // o se emite contra una tabla donde ese id no existe y se pierde sin error.
+      if (Object.keys(parche).length || detalle.length)
+        updates.push({ id: enc.fila.id, patente: enc.fila.patente,
+                       tabla: enc.tabla, parche, detalle });
+    }
+    for (const r of porTabla[tb]) {
+      const k = MG_NP(r.patente);
+      // Las duplicadas entre tablas ya se reportan en plan.duplicados, que dice
+      // más que "ausente"; listarlas acá también sería confuso y engañoso.
+      if (enExcelGlobal.has(k) || conflictivas.has(k)) continue;
+      plan.ausentes.push({ tabla: tb, patente: r.patente, id: r.id,
+        visto: r.visto_en_import });
+    }
+    plan.tablas[tb] = { nuevos, updates, vistos };
+  }
+
+  // ── Choferes: la clave es el DNI, salvo cuando no sirve ──────────────────
+  const chs = c.data || [];
+  const porDni = {};
+  chs.forEach(r => { const d = String(r.dni || '').replace(/\D/g, '');
+    if (d) (porDni[d] = porDni[d] || []).push(r); });
+  const porNom = {};
+  chs.forEach(r => { const n = mgNorm(r.nombre);
+    if (n) (porNom[n] = porNom[n] || []).push(r); });
+  const norm = mgNorm;
+
+  const chNuevos = [], chUpd = [], chVistos = [];
+  for (const v of (db.choferes || [])) {
+    const d = String(v.dni || '').replace(/\D/g, '');
+    let cand = d ? (porDni[d] || []) : [];
+    let via = 'dni';
+    if (cand.length !== 1) {                       // sin DNI, o DNI repetido
+      const n = norm(v.nombre);
+      const porN = porNom[n] || [];
+      if (cand.length > 1)
+        plan.ambiguos.push({ nombre: v.nombre, dni: d,
+          motivo: 'el DNI ' + d + ' está en ' + cand.length + ' choferes',
+          resuelto: porN.length === 1 ? 'por nombre' : 'NO' });
+      cand = porN; via = 'nombre';
+    }
+    if (cand.length !== 1) {
+      if (cand.length === 0) chNuevos.push({ nombre: v.nombre, dni: v.dni || '', tel: v.tel || '' });
+      else plan.ambiguos.push({ nombre: v.nombre, dni: d,
+        motivo: 'el nombre coincide con ' + cand.length + ' choferes', resuelto: 'NO' });
+      continue;
+    }
+    const act = cand[0];
+    chVistos.push(act.id);
+    const parche = {}, detalle = [];
+    for (const [campo, val] of [['nombre', v.nombre], ['dni', v.dni], ['tel', v.tel]]) {
+      if (mgVacio(val)) {
+        if (!mgVacio(act[campo])) detalle.push({ campo, accion: 'conserva',
+          valor: act[campo], motivo: 'el Excel no trae dato' });
+        continue;
+      }
+      // El Excel escribe "Acosta Sebastian" y la base "Acosta, Sebastian".
+      // Es la misma persona escrita distinto, y el formato de la base separa
+      // apellido de nombre, cosa que el del Excel pierde. Si sólo difieren en
+      // puntuación o espacios, se conserva el de la base.
+      if (campo === 'nombre' && norm(val) === norm(act[campo])) {
+        if (String(val).trim() !== String(act[campo] || '').trim())
+          detalle.push({ campo, accion: 'conserva', valor: act[campo],
+            motivo: 'mismo nombre, sólo cambia la puntuación' });
+        continue;
+      }
+      if (String(val).trim() !== String(act[campo] || '').trim()) {
+        parche[campo] = String(val).trim();
+        detalle.push({ campo, accion: 'actualiza', de: act[campo], a: String(val).trim() });
+      }
+    }
+    if (Object.keys(parche).length || detalle.length)
+      chUpd.push({ id: act.id, patente: act.nombre, parche, detalle, via });
+  }
+  const dnisExcel = new Set((db.choferes || []).map(v => String(v.dni || '').replace(/\D/g, '')).filter(Boolean));
+  const nomsExcel = new Set((db.choferes || []).map(v => norm(v.nombre)).filter(Boolean));
+  for (const r of chs) {
+    const d = String(r.dni || '').replace(/\D/g, '');
+    if (!(d && dnisExcel.has(d)) && !nomsExcel.has(norm(r.nombre)))
+      plan.ausentes.push({ tabla: 'choferes', patente: r.nombre, id: r.id,
+        visto: r.visto_en_import });
+  }
+  plan.tablas.choferes = { nuevos: chNuevos, updates: chUpd, vistos: chVistos };
+  return plan;
+}
+
+// Aplica un plan ya revisado. Sólo INSERT y UPDATE: nunca borra, nunca mueve
+// filas entre tablas, nunca toca un id.
+//
+// IDEMPOTENTE a propósito. Un intento anterior pudo haber quedado a mitad —
+// por un error de red, o por el unique de patente abortando un lote — y el
+// plan, calculado antes de eso, sigue diciendo "insertá estas 52". Por eso
+// cada alta se revalida contra el estado FRESCO de la tabla justo antes de
+// escribir, y no contra lo que el plan creía. Reintentar es inofensivo.
+async function mgAplicar(plan) {
+  const ahora = new Date().toISOString();
+  const res = { insertadas: 0, omitidas: 0, actualizadas: 0, marcadas: 0, avisos: [] };
+
+  for (const tb of ['choferes', 'tractores', 'semis']) {
+    const p = plan.tablas[tb];
+    if (!p) continue;
+
+    // ── Altas, revalidadas contra el estado actual ────────────────────────
+    if (p.nuevos.length) {
+      const { data: actual, error: eSel } = await supa.from(tb).select('*');
+      if (eSel) throw new Error(`Releyendo ${tb}: ${eSel.message}`);
+      const existentes = new Set((actual || []).map(r => mgClave(tb, r)));
+
+      const aInsertar = [];
+      for (const r of p.nuevos) {
+        const k = mgClave(tb, r);
+        if (existentes.has(k)) {          // ya está: de un intento previo, o
+          res.omitidas++;                 // repetida dentro del propio Excel
+          continue;
+        }
+        existentes.add(k);
+        aInsertar.push({ ...r, visto_en_import: ahora });
+      }
+
+      if (aInsertar.length) {
+        const { error } = await supa.from(tb).insert(aInsertar);
+        if (error) {
+          // El lote entero se aborta ante una sola violación. Se reintenta
+          // fila por fila para aislar la culpable en vez de perder las demás.
+          res.avisos.push(`Lote de ${tb} rechazado (${error.message}); se inserta de a una.`);
+          for (const r of aInsertar) {
+            const { error: e1 } = await supa.from(tb).insert(r);
+            if (e1) {
+              res.avisos.push(`${tb} ${r.patente || r.nombre}: ${e1.message}`);
+              res.omitidas++;
+            } else res.insertadas++;
+          }
+        } else res.insertadas += aInsertar.length;
+      }
+    }
+
+    // ── Modificaciones ───────────────────────────────────────────────────
+    for (const u of p.updates) {
+      if (!Object.keys(u.parche).length) continue;
+      // u.tabla es donde vive la fila de verdad, que no siempre es tb.
+      const destino = u.tabla || tb;
+      const { data, error } = await supa.from(destino)
+        .update(u.parche).eq('id', u.id).select('id');
+      if (error) throw new Error(`Actualizando ${destino} ${u.patente}: ${error.message}`);
+      // Un update que no alcanza ninguna fila es un error silencioso: se avisa
+      // en vez de contarlo como aplicado.
+      if (!data || !data.length) {
+        res.avisos.push(`${destino} id ${u.id} (${u.patente}): el update no alcanzó ninguna fila`);
+        continue;
+      }
+      res.actualizadas++;
+    }
+
+    // ── Marca de "apareció en esta planilla", en lotes ───────────────────
+    for (let i = 0; i < p.vistos.length; i += 200) {
+      const lote = p.vistos.slice(i, i + 200);
+      const { error } = await supa.from(tb).update({ visto_en_import: ahora }).in('id', lote);
+      if (error) throw new Error(`Marcando ${tb}: ${error.message}`);
+      res.marcadas += lote.length;
+    }
+  }
+  return res;
 }
 
 // ── INIT SÍNCRONA: localStorage como caché rápida ────────────────────────────
@@ -2475,42 +2811,171 @@ function showPreview(fileName, db) {
     html += `</div>`;
   }
 
-  wrap.innerHTML = html;
+  wrap.innerHTML = html
+    + '<div id="mgInforme" style="margin-top:14px;font-size:12px;color:#566573">'
+    + '⏳ Calculando qué cambiaría en la base…</div>';
   card.style.display = 'block';
   card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  mgPrepararInforme(db);
+}
+
+// ── Informe previo: qué se toca y qué se conserva ──────────────────────────
+let pendingPlan = null;
+
+async function mgPrepararInforme(db) {
+  const el = () => document.getElementById('mgInforme');
+  const btn = document.getElementById('btnApplyDb');
+  pendingPlan = null;
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Calculando…'; }
+  try {
+    const plan = await mgPlan(db);
+    pendingPlan = plan;
+    if (el()) el().innerHTML = mgRenderInforme(plan);
+    if (btn) { btn.disabled = false; btn.textContent = '⬆️ Aplicar cambios'; }
+  } catch (e) {
+    console.error('Informe de importación:', e);
+    if (el()) el().innerHTML = '<div style="color:#C0392B">⚠️ No se pudo calcular el informe: '
+      + (e.message || e) + '<br>No se aplicará nada.</div>';
+    if (btn) { btn.disabled = true; btn.textContent = '⛔ Sin informe, no se aplica'; }
+  }
+}
+
+function mgRenderInforme(plan) {
+  const esc = s => String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  let alta = 0, mod = 0, cons = 0;
+  for (const tb of ['choferes','tractores','semis']) {
+    const p = plan.tablas[tb]; if (!p) continue;
+    alta += p.nuevos.length;
+    p.updates.forEach(u => {
+      if (Object.keys(u.parche).length) mod++;
+      cons += u.detalle.filter(d => d.accion === 'conserva').length;
+    });
+  }
+  const caja = (color, titulo, cuerpo) =>
+    `<div style="border-left:3px solid ${color};background:#f8fafc;padding:8px 10px;
+      margin-bottom:8px;border-radius:0 6px 6px 0">
+      <div style="font-weight:700;color:${color};margin-bottom:4px">${titulo}</div>${cuerpo}</div>`;
+
+  let h = `<div class="preview-title">Qué va a pasar en Supabase</div>`;
+  h += `<div class="preview-badges">
+    <span class="preview-badge verde">➕ ${alta} altas</span>
+    <span class="preview-badge">✏️ ${mod} filas modificadas</span>
+    <span class="preview-badge rojo">🛡️ ${cons} campos conservados</span></div>`;
+  h += `<div style="font-size:11px;color:#566573;margin:6px 0 10px">
+    Nada se borra y ningún id cambia, así que los enganches de la pizarra no se tocan.</div>`;
+
+  // Lo más importante: qué se conserva y por qué.
+  const filas = [];
+  for (const tb of ['choferes','tractores','semis'])
+    for (const u of (plan.tablas[tb]?.updates || []))
+      for (const d of u.detalle)
+        if (d.accion === 'conserva' && filas.length < 15)
+          filas.push(`<tr><td>${esc(u.patente)}</td><td>${esc(d.campo)}</td>
+            <td><b>${esc(d.valor)}</b></td><td style="color:#566573">${esc(d.motivo || '')}</td></tr>`);
+  if (filas.length) h += caja('#1a7a4a', '🛡️ Datos de Supabase que NO se pisan',
+    `<div class="preview-table-wrap"><table class="preview-table"><thead><tr>
+      <th>Fila</th><th>Campo</th><th>Se conserva</th><th>Motivo</th></tr></thead>
+      <tbody>${filas.join('')}</tbody></table></div>`
+    + (cons > 15 ? `<div style="font-size:11px;color:#566573;margin-top:4px">…y ${cons-15} más.</div>` : ''));
+
+  if (plan.duplicados.length) h += caja('#C0392B',
+    `⛔ ${plan.duplicados.length} patente(s) duplicada(s) entre tablas — no se tocan`,
+    plan.duplicados.map(d => `<div><b>${esc(d.patente)}</b> está en `
+      + d.en.map(x => `${esc(x.tabla)} (id ${x.id}, ${esc(x.tipo)})`).join(' y ')
+      + `. Hay que borrar una antes de importar.</div>`).join(''));
+
+  if (plan.cruces.length) h += caja('#d35400',
+    `↔️ ${plan.cruces.length} unidad(es) que por su tipo irían en la otra tabla`,
+    plan.cruces.map(c => `<div><b>${esc(c.patente)}</b> (id ${c.id}) está en ${esc(c.de)}, `
+      + `pero el Excel la llama <b>${esc(c.tipoExcel)}</b> → correspondería ${esc(c.a)}.</div>`).join('')
+    + `<div style="font-size:11px;margin-top:4px">El tipo se corrige igual. Mover la fila `
+    + `cambiaría su id y rompería los enganches, así que eso se hace a mano.</div>`);
+
+  if (plan.ambiguos.length) h += caja('#b7950b',
+    `⚠️ ${plan.ambiguos.length} chofer(es) que no se identifican con certeza`,
+    plan.ambiguos.map(a => `<div><b>${esc(a.nombre)}</b>: ${esc(a.motivo)} — `
+      + (a.resuelto === 'NO' ? 'se omite' : 'resuelto ' + esc(a.resuelto)) + `.</div>`).join(''));
+
+  if (plan.ausentes.length) h += caja('#566573',
+    `👻 ${plan.ausentes.length} fila(s) en Supabase que no vienen en esta planilla`,
+    `<div style="font-size:11px">No se borran ni se ocultan: sólo no se actualiza su fecha de import.</div>`
+    + `<div style="font-size:11px;margin-top:4px">`
+    + plan.ausentes.slice(0, 12).map(a => esc(a.patente) + ' (' + a.tabla + ')').join(', ')
+    + (plan.ausentes.length > 12 ? `, …y ${plan.ausentes.length - 12} más` : '') + `</div>`);
+
+  return h;
 }
 
 // ── Aplicar nueva DB ───────────────────────────────────────────────────────
+let mgAplicando = false;
+
 async function applyNewDb() {
   if (!pendingDB) return;
+  // Un segundo click mientras corre el primero duplicaría las altas.
+  if (mgAplicando) { showToast('⏳ Ya se está aplicando…'); return; }
+  if (!pendingPlan) { showToast('⚠️ Subí el Excel de nuevo: el informe está vencido'); return; }
+
   const btn = document.getElementById('btnApplyDb');
+  const plan = pendingPlan;
+  // El plan se consume acá. Aplicado o fallido, deja de ser válido: describe
+  // una base que ya no existe. Reutilizarlo en un reintento fue justamente lo
+  // que insertó choferes repetidos, así que se descarta ANTES de escribir.
+  pendingPlan = null;
+  mgAplicando = true;
   btn.disabled = true;
-  btn.textContent = '⏳ Subiendo a Supabase…';
+  btn.textContent = '⏳ Aplicando cambios…';
 
   try {
-    await saveToSupabase(pendingDB);
-    // Guardar también en caché local para la próxima carga síncrona
-    try { localStorage.setItem('vilaDB_supa_cache', JSON.stringify(pendingDB)); } catch(e) {}
-    btn.textContent = '✅ Guardado — recargando…';
-    showToast('✅ Datos guardados en la nube — recargando…');
-    setTimeout(() => location.reload(), 1200);
+    // Merge, no borrar-e-insertar: preserva los ids y por lo tanto los
+    // enganches de la pizarra, y respeta las correcciones hechas a mano.
+    const res = await mgAplicar(plan);
+    try { localStorage.removeItem('vilaDB_supa_cache'); } catch(e) {}
+    if (res.avisos.length) console.warn('Importación · avisos:', res.avisos);
+    const resumen = `${res.insertadas} altas, ${res.actualizadas} modificadas`
+      + (res.omitidas ? `, ${res.omitidas} omitidas (ya estaban)` : '');
+    btn.textContent = '✅ ' + resumen;
+    showToast('✅ ' + resumen + ' — recargando…');
+    setTimeout(() => location.reload(), 1800);
   } catch(e) {
-    console.error('Error guardando en Supabase:', e);
-    showToast('❌ Error al guardar: ' + e.message);
-    btn.textContent = '⬆️ Aplicar y Guardar Base de Datos';
-    btn.disabled = false;
+    console.error('Error aplicando cambios:', e);
+    // Sin plan válido no se puede reintentar a ciegas: parte pudo haberse
+    // escrito. Hay que volver a subir el Excel para ver el estado real.
+    mgAplicando = false;
+    btn.disabled = true;
+    btn.textContent = '⛔ Falló — volvé a subir el Excel';
+    const inf = document.getElementById('mgInforme');
+    if (inf) inf.innerHTML = '<div style="border-left:3px solid #C0392B;background:#fdedec;'
+      + 'padding:10px;border-radius:0 6px 6px 0">'
+      + '<b style="color:#C0392B">La importación falló a mitad de camino.</b><br>'
+      + '<span style="font-size:12px">' + String(e.message || e) + '</span><br>'
+      + '<span style="font-size:12px;color:#566573">Parte de los cambios puede haberse '
+      + 'aplicado. No reintentes con este informe: volvé a subir el Excel para ver el '
+      + 'estado real de la base. Volver a aplicar es seguro, las altas ya hechas se omiten.'
+      + '</span></div>';
+    showToast('❌ ' + (e.message || e));
   }
 }
 
 // ── Cancelar preview ───────────────────────────────────────────────────────
 function cancelPreview() {
   pendingDB = null;
+  pendingPlan = null;
   document.getElementById('previewCard').style.display = 'none';
   document.getElementById('adminFileInput').value = '';
 }
 
 // ── Restaurar DB original ──────────────────────────────────────────────────
 async function resetToDefaultDb() {
+  // Con la pizarra cargada este botón no puede funcionar: los enganches
+  // referencian tractores.id con on delete restrict, así que el borrado se
+  // aborta. Se avisa antes, en vez de dejar que falle con un error críptico.
+  const { count } = await supa.from('enganches')
+    .select('id', { count: 'exact', head: true });
+  if (count > 0) {
+    showToast('⛔ Hay ' + count + ' enganches en la pizarra: borrá la pizarra primero');
+    return;
+  }
   if (!confirm('¿Confirmar? Se borrarán los datos de Supabase y se vuelve a los datos originales de la app.')) return;
   showToast('🔄 Borrando datos de Supabase…');
   try {
