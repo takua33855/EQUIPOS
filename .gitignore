@@ -1,0 +1,23 @@
+# Respaldos de la base: contienen datos personales de los choferes
+# (nombre, DNI, telefono). Este repositorio es publico, asi que no entran.
+# Viven en C:\Proyectos\pizarra\backups\ y se quedan ahi.
+backups/
+*_backup.json
+*_backup.html
+restore_*.sql
+choferes_*.json
+tractores_*.json
+semis_*.json
+enganches_*.json
+
+# El Excel de origen: tambien trae DNI y telefonos.
+*.xlsx
+*.xls
+
+# Parches temporales del armado de commits
+*.patch
+
+# Sistema
+Thumbs.db
+desktop.ini
+.DS_Store
